@@ -2,7 +2,7 @@
 
 A modern full-stack web application built with React (Next.js), Node.js (Express), and PostgreSQL.
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Node.js 18+ 
@@ -57,7 +57,7 @@ A modern full-stack web application built with React (Next.js), Node.js (Express
    npm run dev
    ```
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 magna-coders/
@@ -100,7 +100,7 @@ magna-coders/
 └── README.md           # This file
 ```
 
-## 🛠 Technologies
+##  Technologies
 
 ### Frontend
 - **Framework**: Next.js 14 with React 18
@@ -121,7 +121,7 @@ magna-coders/
 - **Development**: Hot reload for both frontend and backend
 - **Database**: PostgreSQL with automated migrations
 
-## 🔧 Development
+##  Development
 
 ### Available Scripts
 
@@ -150,12 +150,12 @@ npm run db:migrate          # Run database migrations
 npm run db:studio           # Open Prisma Studio
 ```
 
-## 🌐 API Endpoints
+##  API Endpoints
 
 - `GET /health` - Health check
 - `GET /api` - API welcome message
 
-## 📊 Database
+##  Database
 
 The application uses PostgreSQL with the following key features:
 - UUID primary keys
@@ -163,7 +163,7 @@ The application uses PostgreSQL with the following key features:
 - Indexed columns for performance
 - Sample data for development
 
-## 🚀 Deployment
+##  Deployment
 
 ### Production Build
 ```bash
@@ -177,7 +177,7 @@ cd backend && npm run build
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
@@ -189,14 +189,14 @@ docker-compose -f docker-compose.prod.yml up -d
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+##  Support
 
 For support and questions:
 - Check the [documentation](docs/)
 - Open an issue on GitHub
 - Contact the development team
 
-## 🎯 Roadmap
+##  Roadmap
 
 - [ ] User authentication system
 - [ ] API documentation with Swagger
@@ -206,5 +206,3 @@ For support and questions:
 - [ ] Performance monitoring
 
 ---
-
-**Happy Coding! 🚀**

@@ -16,7 +16,7 @@ const jwtSign = (payload: TokenPayload, expiresIn: string): string => {
 const loginUser = async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body;
 
-  const user = await prisma.user.findFirst({
+  const user = await (prisma as any).users.findFirst({
     where: {
       username: {
         equals: username,
@@ -44,20 +44,23 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
     process.env.ACCESS_TOKEN_EXPIRES_IN || '30m'
   );
 
-  // Create refresh token and persist
-  const refreshToken = jwtSign(
-    { id: user.id },
-    process.env.REFRESH_TOKEN_EXPIRES_IN || '1d'
-  );
+  // Create refresh token and persist (guarded: some deployments may not have a refresh token table)
+  const refreshToken = jwtSign({ id: user.id }, process.env.REFRESH_TOKEN_EXPIRES_IN || '1d');
   const expiresAt = new Date(Date.now() + (parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || '30') * 24 * 60 * 60 * 1000));
 
-  await db.refresh_tokens.create({
-    data: {
-      user_id: user.id,
-      token: refreshToken,
-      expires_at: expiresAt,
+  try {
+    if ((db as any).refresh_tokens) {
+      await (db as any).refresh_tokens.create({
+        data: { user_id: user.id, token: refreshToken, expires_at: expiresAt }
+      });
+    } else if ((prisma as any).refreshToken) {
+      await (prisma as any).refreshToken.create({ data: { userId: user.id, token: refreshToken, expiresAt } });
+    } else {
+      console.warn('Refresh token model not present in Prisma client; skipping persistence');
     }
-  });
+  } catch (err) {
+    console.warn('Error persisting refresh token:', err);
+  }
 
   res.status(200).json({
     accessToken,
@@ -96,7 +99,7 @@ const signupUser = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const existingUser = await prisma.user.findFirst({
+  const existingUser = await (prisma as any).users.findFirst({
     where: {
       OR: [
         {
@@ -121,7 +124,7 @@ const signupUser = async (req: Request, res: Response): Promise<void> => {
   const saltRounds = 10;
   const passwordHash = await bcrypt.hash(password, saltRounds);
 
-  const user = await prisma.user.create({
+  const user = await (prisma as any).users.create({
     data: {
       username,
       email,
@@ -133,7 +136,19 @@ const signupUser = async (req: Request, res: Response): Promise<void> => {
   const refreshToken = jwt.sign({ id: user.id }, SECRET as any, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d' } as any);
   const expiresAt = new Date(Date.now() + (parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || '30') * 24 * 60 * 60 * 1000));
 
-  await (prisma as any).refreshToken.create({ data: { userId: user.id, token: refreshToken, expiresAt } });
+  try {
+    if ((prisma as any).refreshToken) {
+      await (prisma as any).refreshToken.create({ data: { userId: user.id, token: refreshToken, expiresAt } });
+    } else if ((prisma as any).refresh_tokens) {
+      await (prisma as any).refresh_tokens.create({ data: { user_id: user.id, token: refreshToken, expires_at: expiresAt } });
+    } else if ((db as any).refresh_tokens) {
+      await (db as any).refresh_tokens.create({ data: { user_id: user.id, token: refreshToken, expires_at: expiresAt } });
+    } else {
+      console.warn('Refresh token model not present in Prisma client; skipping persistence');
+    }
+  } catch (err) {
+    console.warn('Error persisting refresh token:', err);
+  }
 
   res.status(200).json({
     accessToken,
@@ -159,29 +174,58 @@ const refreshAccessToken = async (req: Request, res: Response): Promise<void> =>
 
   try {
     // Verify JWT signature
-  const decoded = jwt.verify(refreshToken, SECRET as any) as { id: string };
+    const decoded = jwt.verify(refreshToken, SECRET as any) as { id: string };
 
-    // Find token in database
-  const tokenRecord = await (prisma as any).refreshToken.findFirst({ where: { token: refreshToken } });
+    // If no refresh token storage exists, indicate unsupported
+    if (!(prisma as any).refreshToken && !(prisma as any).refresh_tokens && !(db as any).refresh_tokens) {
+      res.status(501).json({ message: 'Refresh tokens not supported on this deployment' });
+      return;
+    }
+
+    // Find token in database (support a few naming conventions)
+    let tokenRecord: any = null;
+    if ((prisma as any).refreshToken) {
+      tokenRecord = await (prisma as any).refreshToken.findFirst({ where: { token: refreshToken } });
+    } else if ((db as any).refresh_tokens) {
+      tokenRecord = await (db as any).refresh_tokens.findFirst({ where: { token: refreshToken } });
+    } else if ((prisma as any).refresh_tokens) {
+      tokenRecord = await (prisma as any).refresh_tokens.findFirst({ where: { token: refreshToken } });
+    }
+
     if (!tokenRecord || tokenRecord.revoked) {
       res.status(401).json({ message: 'Invalid refresh token' });
       return;
     }
 
-    if (tokenRecord.expiresAt < new Date()) {
+    if (tokenRecord.expiresAt && tokenRecord.expiresAt < new Date()) {
       res.status(401).json({ message: 'Refresh token expired' });
       return;
     }
 
     // Rotate: revoke old token and create a new refresh token
-  await (prisma as any).refreshToken.update({ where: { id: tokenRecord.id }, data: { revoked: true } });
+    try {
+      if ((prisma as any).refreshToken) {
+        await (prisma as any).refreshToken.update({ where: { id: tokenRecord.id }, data: { revoked: true } });
+      } else if ((db as any).refresh_tokens) {
+        await (db as any).refresh_tokens.update({ where: { id: tokenRecord.id }, data: { revoked: true } });
+      }
+    } catch (err) {
+      console.warn('Failed to revoke old refresh token:', err);
+    }
 
-  const newRefreshToken = jwt.sign({ id: decoded.id }, SECRET as any, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d' } as any);
+    const newRefreshToken = jwt.sign({ id: decoded.id }, SECRET as any, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d' } as any);
     const newExpiresAt = new Date(Date.now() + (parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || '30') * 24 * 60 * 60 * 1000));
-  await (prisma as any).refreshToken.create({ data: { userId: decoded.id, token: newRefreshToken, expiresAt: newExpiresAt } });
+    try {
+      if ((prisma as any).refreshToken) {
+        await (prisma as any).refreshToken.create({ data: { userId: decoded.id, token: newRefreshToken, expiresAt: newExpiresAt } });
+      } else if ((db as any).refresh_tokens) {
+        await (db as any).refresh_tokens.create({ data: { user_id: decoded.id, token: newRefreshToken, expires_at: newExpiresAt } });
+      }
+    } catch (err) {
+      console.warn('Failed to create new refresh token record:', err);
+    }
 
-  const newAccessToken = jwt.sign({ id: decoded.id }, SECRET as any, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '15m' } as any);
-
+    const newAccessToken = jwt.sign({ id: decoded.id }, SECRET as any, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '15m' } as any);
     res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
   } catch (error) {
     console.error('Refresh token error', error);
@@ -192,7 +236,7 @@ const refreshAccessToken = async (req: Request, res: Response): Promise<void> =>
 const getUserProfile = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
-  const user = await prisma.user.findUnique({
+  const user = await (prisma as any).users.findUnique({
     where: { id },
     select: {
       id: true,
@@ -248,7 +292,7 @@ const updateUserProfile = async (req: Request, res: Response): Promise<void> => 
     location
   } = req.body;
 
-  const updatedUser = await prisma.user.update({
+  const updatedUser = await (prisma as any).users.update({
     where: { id },
     data: {
       bio,

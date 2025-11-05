@@ -1,22 +1,20 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '../../utils/prismaClient';
 
 const getComments = async (req: Request, res: Response): Promise<void> => {
   const { postId } = req.params;
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
 
-  const post = await prisma.post.findUnique({ where: { id: postId } });
+  const post = await db.posts.findUnique({ where: { id: postId } });
   if (!post) {
     res.status(404).send({ message: 'Post not found.' });
     return;
   }
 
-  const comments = await prisma.comment.findMany({
-    where: { postId },
-    orderBy: { createdAt: 'asc' },
+  const comments = await db.comments.findMany({
+    where: { post_id: postId },
+    orderBy: { created_at: 'asc' },
     take: limit,
     skip: (page - 1) * limit,
     include: {
@@ -24,37 +22,36 @@ const getComments = async (req: Request, res: Response): Promise<void> => {
         select: {
           id: true,
           username: true,
-          avatar: true,
-          isVerified: true,
-          verificationBadge: true,
+          avatar_url: true,
+          profile_complete_percentage: true,
         }
       },
-      replies: {
+      comment_replies: {
         include: {
           author: {
             select: {
               id: true,
               username: true,
-              avatar: true,
-              isVerified: true,
+              avatar_url: true,
+              profile_complete_percentage: true
             }
           },
           _count: {
             select: { likes: true }
           }
         },
-        orderBy: { createdAt: 'asc' }
+        orderBy: { created_at: 'asc' }
       },
       _count: {
-        select: { likes: true, replies: true }
+        select: { likes: true, comment_replies: true }
       }
     }
   });
 
-  const commentsWithCounts = comments.map(comment => ({
+  const commentsWithCounts = comments.map((comment: any) => ({
     ...comment,
     likesCount: comment._count.likes,
-    repliesCount: comment._count.replies,
+    repliesCount: comment._count.comment_replies,
     _count: undefined,
   }));
 
@@ -71,49 +68,40 @@ const createComment = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const post = await prisma.post.findUnique({ where: { id: postId } });
+  const post = await db.posts.findUnique({ where: { id: postId } });
   if (!post) {
     res.status(404).send({ message: 'Post not found.' });
     return;
   }
 
-  const author = await prisma.user.findUnique({ where: { id: userId } });
+  const author = await db.users.findUnique({ where: { id: userId } });
   if (!author) {
     res.status(404).send({ message: 'User not found.' });
     return;
   }
 
-  const comment = await prisma.comment.create({
+  const comment = await db.comments.create({
     data: {
       content: content.trim(),
-      post: { connect: { id: postId } },
-      author: { connect: { id: userId } },
+      post_id: postId,
+      author_id: userId
     },
     include: {
       author: {
         select: {
           id: true,
           username: true,
-          avatar: true,
-          isVerified: true,
+          avatar_url: true,
+          profile_complete_percentage: true
         }
       }
     }
   });
 
   // Update post comment count
-  await prisma.post.update({
+  await db.posts.update({
     where: { id: postId },
-    data: { commentsCount: { increment: 1 } }
-  });
-
-  // Award karma and tokens for commenting and use though u will change it later
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      commentKarma: { increment: 1 },
-      tokens: { increment: 2 }
-    }
+    data: { comments_count: { increment: 1 } }
   });
 
   res.status(201).json(comment);
@@ -129,7 +117,7 @@ const updateComment = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const comment = await prisma.comment.findUnique({
+  const comment = await db.comments.findUnique({
     where: { id },
     include: { author: true }
   });
@@ -139,24 +127,25 @@ const updateComment = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  if (comment.authorId !== userId) {
+  if (comment.author_id !== userId) {
     res.status(403).send({ message: 'Access denied.' });
     return;
   }
 
-  const updatedComment = await prisma.comment.update({
+  const updatedComment = await db.comments.update({
     where: { id },
     data: {
       content: content.trim(),
-      isEdited: true,
-      updatedAt: new Date(),
+      is_edited: true,
+      updated_at: new Date(),
     },
     include: {
       author: {
         select: {
           id: true,
           username: true,
-          avatar: true,
+          avatar_url: true,
+          profile_complete_percentage: true
         }
       }
     }
@@ -169,9 +158,9 @@ const deleteComment = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const userId = req.user as string;
 
-  const comment = await prisma.comment.findUnique({
+  const comment = await db.comments.findUnique({
     where: { id },
-    include: { author: true, post: true }
+    include: { author: true }
   });
 
   if (!comment) {
@@ -179,28 +168,46 @@ const deleteComment = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  if (comment.authorId !== userId) {
-    res.status(403).send({ message: 'Access denied.' });
+  if (comment.author_id !== userId) {
+    res.status(403).send({ message: 'Not authorized to delete this comment.' });
     return;
   }
 
-  await prisma.comment.delete({ where: { id } });
+  // Delete the comment - this will cascade delete replies and likes due to the schema configuration
+  await db.comments.delete({ where: { id } });
 
-  // Update post comment count and decrement author's comment karma
-  await prisma.post.update({
-    where: { id: comment.postId },
-    data: { commentsCount: { decrement: 1 } }
+  res.status(200).json({ message: 'Comment deleted successfully.' });
+};
+
+const deleteReply = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const userId = req.user as string;
+
+  const reply = await db.comment_replies.findUnique({
+    where: { id },
+    include: { author: true, comment: true }
   });
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      commentKarma: { decrement: 1 },
-      tokens: { decrement: 2 }
-    }
+  if (!reply) {
+    res.status(404).send({ message: 'Reply not found.' });
+    return;
+  }
+
+  if (reply.author_id !== userId) {
+    res.status(403).send({ message: 'Not authorized to delete this reply.' });
+    return;
+  }
+
+  // Delete the reply - this will cascade delete likes due to the schema configuration
+  await db.comment_replies.delete({ where: { id } });
+
+  // Update comment reply count
+  await db.comments.update({
+    where: { id: reply.comment_id },
+    data: { comment_replies_count: { decrement: 1 } }
   });
 
-  res.status(204).end();
+  res.status(200).json({ message: 'Reply deleted successfully.' });
 };
 
 const createReply = async (req: Request, res: Response): Promise<void> => {
@@ -213,46 +220,40 @@ const createReply = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const comment = await prisma.comment.findUnique({ where: { id: commentId } });
+  const comment = await db.comments.findUnique({ where: { id: commentId } });
   if (!comment) {
     res.status(404).send({ message: 'Comment not found.' });
     return;
   }
 
-  const author = await prisma.user.findUnique({ where: { id: userId } });
+  const author = await db.users.findUnique({ where: { id: userId } });
   if (!author) {
     res.status(404).send({ message: 'User not found.' });
     return;
   }
 
-  const reply = await prisma.reply.create({
+  const reply = await db.comment_replies.create({
     data: {
       content: content.trim(),
-      comment: { connect: { id: commentId } },
-      author: { connect: { id: userId } },
+      comment_id: commentId,
+      author_id: userId
     },
     include: {
       author: {
         select: {
           id: true,
           username: true,
-          avatar: true,
-          isVerified: true,
+          avatar_url: true,
+          profile_complete_percentage: true
         }
       }
     }
   });
 
   // Update comment reply count
-  await prisma.comment.update({
+  await db.comments.update({
     where: { id: commentId },
-    data: { repliesCount: { increment: 1 } }
-  });
-
-  // Award tokens
-  await prisma.user.update({
-    where: { id: userId },
-    data: { tokens: { increment: 1 } }
+    data: { comment_replies_count: { increment: 1 } }
   });
 
   res.status(201).json(reply);
@@ -262,38 +263,38 @@ const likeComment = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const userId = req.user as string;
 
-  const comment = await prisma.comment.findUnique({ where: { id } });
+  const comment = await db.comments.findUnique({ where: { id } });
   if (!comment) {
     res.status(404).send({ message: 'Comment not found.' });
     return;
   }
 
-  const existingLike = await prisma.like.findFirst({
+  const existingLike = await db.likes.findFirst({
     where: {
-      userId,
-      commentId: id,
+      user_id: userId,
+      comment_id: id,
     }
   });
 
   if (existingLike) {
     // Unlike
-    await prisma.like.delete({ where: { id: existingLike.id } });
-    await prisma.comment.update({
+    await db.likes.delete({ where: { id: existingLike.id } });
+    await db.comments.update({
       where: { id },
-      data: { likesCount: { decrement: 1 } }
+      data: { likes_count: { decrement: 1 } }
     });
     res.status(200).json({ liked: false });
   } else {
     // Like
-    await prisma.like.create({
+    await db.likes.create({
       data: {
-        user: { connect: { id: userId } },
-        comment: { connect: { id } },
+        user_id: userId,
+        comment_id: id
       }
     });
-    await prisma.comment.update({
+    await db.comments.update({
       where: { id },
-      data: { likesCount: { increment: 1 } }
+      data: { likes_count: { increment: 1 } }
     });
     res.status(200).json({ liked: true });
   }
@@ -303,38 +304,38 @@ const likeReply = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const userId = req.user as string;
 
-  const reply = await prisma.reply.findUnique({ where: { id } });
+  const reply = await db.comment_replies.findUnique({ where: { id } });
   if (!reply) {
     res.status(404).send({ message: 'Reply not found.' });
     return;
   }
 
-  const existingLike = await prisma.like.findFirst({
+  const existingLike = await db.likes.findFirst({
     where: {
-      userId,
-      replyId: id,
+      user_id: userId,
+      reply_id: id,
     }
   });
 
   if (existingLike) {
     // Unlike
-    await prisma.like.delete({ where: { id: existingLike.id } });
-    await prisma.reply.update({
+    await db.likes.delete({ where: { id: existingLike.id } });
+    await db.comment_replies.update({
       where: { id },
-      data: { likesCount: { decrement: 1 } }
+      data: { likes_count: { decrement: 1 } }
     });
     res.status(200).json({ liked: false });
   } else {
     // Like
-    await prisma.like.create({
+    await db.likes.create({
       data: {
-        user: { connect: { id: userId } },
-        reply: { connect: { id } },
+        user_id: userId,
+        reply_id: id
       }
     });
-    await prisma.reply.update({
+    await db.comment_replies.update({
       where: { id },
-      data: { likesCount: { increment: 1 } }
+      data: { likes_count: { increment: 1 } }
     });
     res.status(200).json({ liked: true });
   }

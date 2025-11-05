@@ -2,8 +2,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { SECRET } from '../utils/config';
-
-const prisma = new PrismaClient();
+import { prisma, db } from '../utils/prismaClient';
 
 interface JwtPayload {
   id: string;
@@ -41,7 +40,7 @@ export const authenticateToken = async (
     const decoded = jwt.verify(token, SECRET) as JwtPayload;
 
     // Check if user exists
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: decoded.id },
       select: { id: true, isVerified: true, role: true }
     });
@@ -106,10 +105,10 @@ export const requireVerification = async (
       return;
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { isVerified: true }
-    });
+    } as any);
 
     if (!user?.isVerified) {
       res.status(403).json({

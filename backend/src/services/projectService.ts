@@ -1,4 +1,8 @@
 import { Project } from '../api';
+import { db } from '../utils/prismaClient';
+
+type ProjectType = 'FIXED_PRICE' | 'HOURLY' | 'MILESTONE';
+type ProjectStatus = 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 class ProjectService {
   private projectModel: Project;
@@ -11,12 +15,12 @@ class ProjectService {
   async createProject(projectData: {
     title: string;
     description: string;
-    projectType: 'WEBSITE' | 'MOBILE_APP' | 'DESKTOP_APP' | 'API' | 'OTHER';
+    projectType: ProjectType;
     technologies: string[];
     budget: number;
     deadline?: Date;
     clientId: string;
-    categoryId: string;
+    categoryId?: string;
   }) {
     // Validate required fields
     if (!projectData.title?.trim() || !projectData.description?.trim() || !projectData.budget) {
@@ -27,7 +31,16 @@ class ProjectService {
       throw new Error('Budget must be greater than 0');
     }
 
-    return await this.projectModel.create(projectData);
+    return await this.projectModel.create({
+      title: projectData.title,
+      description: projectData.description,
+      projectType: projectData.projectType,
+      technologies: projectData.technologies,
+      budget: projectData.budget,
+      deadline: projectData.deadline,
+      ownerId: projectData.clientId,
+      categoryId: projectData.categoryId
+    });
   }
 
   // Get projects with filtering
@@ -106,17 +119,99 @@ class ProjectService {
       throw new Error('Proposal is required');
     }
 
-    return await this.projectModel.placeBid(projectId, bidderId, amount, proposal);
+    const project = await this.projectModel.findById(projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    if (project.status !== 'OPEN') {
+      throw new Error('Can only bid on open projects');
+    }
+
+    return await db.project_bids.create({
+      data: {
+        project_id: projectId,
+        user_id: bidderId,
+        amount,
+        proposal: proposal.trim(),
+        status: 'PENDING'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar_url: true
+          }
+        }
+      }
+    });
   }
 
   // Accept bid
   async acceptBid(projectId: string, bidId: string, clientId: string) {
-    const result = await this.projectModel.acceptBid(projectId, bidId, clientId);
+    const project = await this.projectModel.findById(projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
 
-    // Award tokens to developer
-    // This would be handled by the user service
+    if (project.owner_id !== clientId) {
+      throw new Error('Only project owner can accept bids');
+    }
 
-    return result;
+    if (project.status !== 'OPEN') {
+      throw new Error('Can only accept bids on open projects');
+    }
+
+    const bid = await db.project_bids.findUnique({
+      where: { id: bidId }
+    });
+
+    if (!bid) {
+      throw new Error('Bid not found');
+    }
+
+    if (bid.status !== 'PENDING') {
+      throw new Error('Can only accept pending bids');
+    }
+
+    // Start transaction to update bid and project
+    const [updatedBid, updatedProject] = await db.$transaction([
+      // Update bid status
+      db.project_bids.update({
+        where: { id: bidId },
+        data: { status: 'ACCEPTED' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              avatar_url: true
+            }
+          }
+        }
+      }),
+      // Update project status and add member
+      db.projects.update({
+        where: { id: projectId },
+        data: {
+          status: 'IN_PROGRESS',
+          project_members: {
+            create: {
+              user_id: bid.user_id,
+              role: 'member'
+            }
+          }
+        }
+      })
+    ]);
+
+    // Award tokens to developer (would be handled by user service)
+    
+    return {
+      bid: updatedBid,
+      project: updatedProject
+    };
   }
 
   // Update project status
@@ -129,7 +224,8 @@ class ProjectService {
   async getUserProjects(userId: string, options: {
     page?: number;
     limit?: number;
-    role?: 'client' | 'assignee' | 'both';
+    role?: 'owner' | 'member' | 'both';
+    status?: ProjectStatus;
   } = {}) {
     return await this.projectModel.getUserProjects(userId, options);
   }
@@ -173,7 +269,7 @@ class ProjectService {
     });
 
     const filteredProjects = projects.projects.filter(
-      project => project.budget && project.budget >= minBudget && project.budget <= maxBudget
+      (project: { budget: number }) => project.budget && project.budget >= minBudget && project.budget <= maxBudget
     );
 
     return {

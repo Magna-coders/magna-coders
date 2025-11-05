@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, db } from '../../utils/prismaClient';
 
 const getPosts = async (req: Request, res: Response): Promise<void> => {
 	const page = Math.max(Number(req.query.page || 1), 1);
@@ -21,7 +19,7 @@ const getPosts = async (req: Request, res: Response): Promise<void> => {
 	}
 
 	const [posts, total] = await Promise.all([
-		prisma.post.findMany({
+		db.posts.findMany({
 			where,
 			skip,
 			take: limit,
@@ -35,7 +33,7 @@ const getPosts = async (req: Request, res: Response): Promise<void> => {
 				}
 			}
 		}),
-		prisma.post.count({ where })
+		db.posts.count({ where } as any)
 	]);
 
 	const totalPages = Math.ceil(total / limit);
@@ -46,7 +44,7 @@ const getPosts = async (req: Request, res: Response): Promise<void> => {
 const getPostById = async (req: Request, res: Response): Promise<void> => {
 	const { id } = req.params;
 
-	const post = await prisma.post.update({
+	const post = await db.posts.update({
 		where: { id },
 		data: { viewsCount: { increment: 1 } },
 		include: {
@@ -82,7 +80,7 @@ const createPost = async (req: Request, res: Response): Promise<void> => {
 		return;
 	}
 
-	const post = await prisma.post.create({
+	const post = await db.posts.create({
 		data: {
 			title: title.trim(),
 			content: content || null,
@@ -106,7 +104,7 @@ const updatePost = async (req: Request, res: Response): Promise<void> => {
 		return;
 	}
 
-	const post = await prisma.post.findUnique({ where: { id } });
+	const post = await db.posts.findUnique({ where: { id } } as any);
 	if (!post) {
 		res.status(404).json({ message: 'Post not found' });
 		return;
@@ -117,7 +115,7 @@ const updatePost = async (req: Request, res: Response): Promise<void> => {
 		return;
 	}
 
-	const updated = await prisma.post.update({
+	const updated = await db.posts.update({
 		where: { id },
 		data: {
 			title: title !== undefined ? title : post.title,
@@ -139,7 +137,7 @@ const deletePost = async (req: Request, res: Response): Promise<void> => {
 		return;
 	}
 
-	const post = await prisma.post.findUnique({ where: { id } });
+	const post = await db.posts.findUnique({ where: { id } } as any);
 	if (!post) {
 		res.status(404).json({ message: 'Post not found' });
 		return;
@@ -150,7 +148,7 @@ const deletePost = async (req: Request, res: Response): Promise<void> => {
 		return;
 	}
 
-	await prisma.post.delete({ where: { id } });
+	await db.posts.delete({ where: { id } });
 
 	res.status(200).json({ message: 'Post deleted successfully' });
 };
@@ -164,13 +162,13 @@ const likePost = async (req: Request, res: Response): Promise<void> => {
 		return;
 	}
 
-	const existing = await prisma.like.findFirst({ where: { postId: id, userId } });
+	const existing = await db.likes.findFirst({ where: { postId: id, userId } } as any);
 
 	if (existing) {
 		// unlike
 		await prisma.$transaction([
-			prisma.like.delete({ where: { id: existing.id } }),
-			prisma.post.update({ where: { id }, data: { likesCount: { decrement: 1 } } })
+			db.likes.delete({ where: { id: existing.id } }),
+			db.posts.update({ where: { id }, data: { likesCount: { decrement: 1 } } } as any)
 		]);
 
 		res.status(200).json({ liked: false });
@@ -179,8 +177,8 @@ const likePost = async (req: Request, res: Response): Promise<void> => {
 
 	// like
 	await prisma.$transaction([
-		prisma.like.create({ data: { postId: id, userId } }),
-		prisma.post.update({ where: { id }, data: { likesCount: { increment: 1 } } })
+		db.likes.create({ data: { postId: id, userId } } as any),
+		db.posts.update({ where: { id }, data: { likesCount: { increment: 1 } } } as any)
 	]);
 
 	res.status(200).json({ liked: true });

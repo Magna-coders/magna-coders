@@ -6,6 +6,7 @@ const stripe: Stripe | null = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, ({ apiVersion: '2023-10-16' } as any))
   : null;
 
+import { PaymentStatus } from '../../types/payments';
 const paymentService = new PaymentService();
 
 // Stripe webhook handler
@@ -40,19 +41,19 @@ const handleStripeWebhook = async (req: Request, res: Response): Promise<void> =
     switch (event.type) {
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        await paymentService.confirmStripePayment(paymentIntent.id, 'COMPLETED');
+        await paymentService.confirmStripePayment(paymentIntent.id, PaymentStatus.COMPLETED);
         console.log(`Payment ${paymentIntent.id} succeeded`);
         break;
 
       case 'payment_intent.payment_failed':
         const failedPaymentIntent = event.data.object as Stripe.PaymentIntent;
-        await paymentService.confirmStripePayment(failedPaymentIntent.id, 'FAILED');
+        await paymentService.confirmStripePayment(failedPaymentIntent.id, PaymentStatus.FAILED);
         console.log(`Payment ${failedPaymentIntent.id} failed`);
         break;
 
       case 'payment_intent.canceled':
         const canceledPaymentIntent = event.data.object as Stripe.PaymentIntent;
-        await paymentService.confirmStripePayment(canceledPaymentIntent.id, 'CANCELLED');
+        await paymentService.confirmStripePayment(canceledPaymentIntent.id, PaymentStatus.CANCELLED);
         console.log(`Payment ${canceledPaymentIntent.id} canceled`);
         break;
 

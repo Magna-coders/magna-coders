@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import PaymentService from '../../services/paymentService';
 
+import { PaymentStatus } from '../../types/payments';
 const paymentService = new PaymentService();
 
 // M-Pesa webhook handler
@@ -35,7 +36,7 @@ const handleMpesaWebhook = async (req: Request, res: Response): Promise<void> =>
       console.log(`M-Pesa payment successful: ${mpesaReceiptNumber}, Amount: ${amount}`);
 
       // Confirm payment
-      await paymentService.confirmMpesaPayment(checkoutRequestId, mpesaReceiptNumber, 'COMPLETED');
+      await paymentService.confirmMpesaPayment(checkoutRequestId, mpesaReceiptNumber, PaymentStatus.COMPLETED);
 
       res.status(200).json({
         ResultCode: 0,
@@ -48,7 +49,7 @@ const handleMpesaWebhook = async (req: Request, res: Response): Promise<void> =>
       const resultDesc = stkCallback.ResultDesc || 'Payment failed';
       console.log(`M-Pesa payment failed: ${checkoutRequestId}, Result: ${resultCode}, ${resultDesc}`);
 
-      await paymentService.confirmMpesaPayment(checkoutRequestId, '', 'FAILED');
+      await paymentService.confirmMpesaPayment(checkoutRequestId, '', PaymentStatus.FAILED);
 
       res.status(200).json({
         ResultCode: resultCode,
@@ -104,7 +105,7 @@ const confirmMpesaPayment = async (req: Request, res: Response):Promise<void> =>
   }
 
   try {
-    await paymentService.confirmMpesaPayment(checkoutRequestId, mpesaReceiptNumber, 'COMPLETED');
+    await paymentService.confirmMpesaPayment(checkoutRequestId, mpesaReceiptNumber, PaymentStatus.COMPLETED);
 
     res.status(200).json({
       success: true,

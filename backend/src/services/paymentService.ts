@@ -1,9 +1,9 @@
-import { PrismaClient, PaymentMethod, PaymentStatus, Currency } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
 import paypal from '@paypal/checkout-server-sdk';
 import axios from 'axios';
-
-const prisma = new PrismaClient();
+import { PaymentMethod, PaymentStatus, Currency } from '../types/payments';
+import { db } from '../utils/prismaClient';
 
 // Initialize payment providers
 const stripe: Stripe | null = process.env.STRIPE_SECRET_KEY
@@ -36,15 +36,11 @@ interface MpesaPaymentData {
 }
 
 class PaymentService {
-  private prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = prisma;
-  }
+  constructor() {}
 
   // Create payment intent
   async createPaymentIntent(data: PaymentData): Promise<any> {
-    const payment = await this.prisma.payment.create({
+    const payment = await db.payments.create({
       data: {
         amount: data.amount,
         currency: data.currency,
@@ -91,7 +87,7 @@ class PaymentService {
       });
 
       // Update payment with external ID
-      await this.prisma.payment.update({
+      await db.payments.update({
         where: { id: payment.id },
         data: {
           externalId: paymentIntent.id,
@@ -129,7 +125,7 @@ class PaymentService {
       const order = await paypalClient.execute(request);
 
       // Update payment with external ID
-      await this.prisma.payment.update({
+      await db.payments.update({
         where: { id: payment.id },
         data: {
           externalId: order.result.id,
@@ -152,7 +148,7 @@ class PaymentService {
   private async initiateMpesaPayment(payment: any, data: PaymentData): Promise<any> {
     try {
       // Get user's phone number
-      const user = await this.prisma.user.findUnique({
+      const user = await db.users.findUnique({
         where: { id: data.fromUserId },
         select: { phone: true }
       });
@@ -171,7 +167,7 @@ class PaymentService {
       const response = await this.callMpesaSTKPush(mpesaData);
 
       // Update payment with external ID
-      await this.prisma.payment.update({
+      await db.payments.update({
         where: { id: payment.id },
         data: {
           externalId: response.CheckoutRequestID,
@@ -260,7 +256,7 @@ class PaymentService {
     };
 
     // Update payment status
-    await this.prisma.payment.update({
+    await db.payments.update({
       where: { id: payment.id },
       data: {
         status: 'PENDING',
@@ -282,7 +278,7 @@ class PaymentService {
     }
 
     // Check sender's wallet balance
-    const senderWallet = await this.prisma.wallet.findUnique({
+    const senderWallet = await db.wallets.findUnique({
       where: { userId: data.fromUserId }
     });
 
@@ -291,7 +287,7 @@ class PaymentService {
     }
 
     // Check recipient's wallet
-    const recipientWallet = await this.prisma.wallet.findUnique({
+    const recipientWallet = await db.wallets.findUnique({
       where: { userId: data.toUserId }
     });
 
@@ -300,21 +296,21 @@ class PaymentService {
     }
 
     // Process the transfer
-    await this.prisma.$transaction(async (tx) => {
+    await db.$transaction(async (tx: any) => {
       // Deduct from sender
-      await tx.wallet.update({
+      await tx.wallets.update({
         where: { userId: data.fromUserId },
         data: { balance: { decrement: data.amount } }
       });
 
       // Add to recipient
-      await tx.wallet.update({
+      await tx.wallets.update({
         where: { userId: data.toUserId },
         data: { balance: { increment: data.amount } }
       });
 
       // Update payment status
-      await tx.payment.update({
+      await tx.payments.update({
         where: { id: payment.id },
         data: {
           status: 'COMPLETED',
@@ -333,7 +329,7 @@ class PaymentService {
 
   // Confirm payment (webhook handlers)
   async confirmStripePayment(paymentIntentId: string, status: PaymentStatus): Promise<void> {
-    const payment = await this.prisma.payment.findFirst({
+    const payment = await db.payments.findFirst({
       where: { externalId: paymentIntentId }
     });
 
@@ -341,7 +337,7 @@ class PaymentService {
       throw new Error('Payment not found');
     }
 
-    await this.prisma.payment.update({
+    await db.payments.update({
       where: { id: payment.id },
       data: {
         status,
@@ -357,7 +353,7 @@ class PaymentService {
   }
 
   async confirmPayPalPayment(orderId: string, status: PaymentStatus): Promise<void> {
-    const payment = await this.prisma.payment.findFirst({
+    const payment = await db.payments.findFirst({
       where: { externalId: orderId }
     });
 
@@ -365,7 +361,7 @@ class PaymentService {
       throw new Error('Payment not found');
     }
 
-    await this.prisma.payment.update({
+    await db.payments.update({
       where: { id: payment.id },
       data: {
         status,
@@ -380,7 +376,7 @@ class PaymentService {
   }
 
   async confirmMpesaPayment(checkoutRequestId: string, mpesaReceiptNumber: string, status: PaymentStatus): Promise<void> {
-    const payment = await this.prisma.payment.findFirst({
+    const payment = await db.payments.findFirst({
       where: { externalId: checkoutRequestId }
     });
 
@@ -388,7 +384,7 @@ class PaymentService {
       throw new Error('Payment not found');
     }
 
-    await this.prisma.payment.update({
+    await db.payments.update({
       where: { id: payment.id },
       data: {
         status,
@@ -406,7 +402,7 @@ class PaymentService {
   private async handleProjectPayment(payment: any): Promise<void> {
     if (!payment.projectId) return;
 
-    const project = await this.prisma.project.findUnique({
+    const project = await db.projects.findUnique({
       where: { id: payment.projectId },
       include: { assignedTo: true }
     });
@@ -416,14 +412,14 @@ class PaymentService {
     // Award tokens to developer
     if (project.assignedTo) {
       const tokenAmount = Math.floor(payment.amount / 10); // 1 token per $10
-      await this.prisma.user.update({
+      await db.users.update({
         where: { id: project.assignedTo.id },
         data: { tokens: { increment: tokenAmount } }
       });
     }
 
     // Update project status if this completes the payment
-    const totalPaid = await this.prisma.payment.aggregate({
+    const totalPaid = await db.payments.aggregate({
       where: {
         projectId: payment.projectId,
         status: 'COMPLETED'
@@ -435,7 +431,7 @@ class PaymentService {
     const projectBudget = project.budget ?? 0;
 
     if (totalAmountPaid >= projectBudget) {
-      await this.prisma.project.update({
+      await db.projects.update({
         where: { id: payment.projectId },
         data: { status: 'COMPLETED' }
       });
@@ -444,7 +440,7 @@ class PaymentService {
 
   // Get payment history
   async getPaymentHistory(userId: string, page: number = 1, limit: number = 20): Promise<any> {
-    const payments = await this.prisma.payment.findMany({
+    const payments = await db.payments.findMany({
       where: {
         OR: [
           { fromUserId: userId },
@@ -472,7 +468,7 @@ class PaymentService {
 
   // Get wallet balance
   async getWalletBalance(userId: string): Promise<any> {
-    const wallet = await this.prisma.wallet.findUnique({
+    const wallet = await db.wallets.findUnique({
       where: { userId },
       select: {
         balance: true,
@@ -486,7 +482,7 @@ class PaymentService {
 
     if (!wallet) {
       // Create wallet if it doesn't exist
-      const newWallet = await this.prisma.wallet.create({
+      const newWallet = await db.wallets.create({
         data: { userId },
         select: {
           balance: true,
@@ -505,7 +501,7 @@ class PaymentService {
 
   // Process refunds
   async processRefund(paymentId: string, amount?: number, reason?: string): Promise<any> {
-    const payment = await this.prisma.payment.findUnique({
+    const payment = await db.payments.findUnique({
       where: { id: paymentId }
     });
 
@@ -539,7 +535,7 @@ class PaymentService {
       reason: reason as any || 'requested_by_customer',
     });
 
-    await this.prisma.payment.update({
+    await db.payments.update({
       where: { id: payment.id },
       data: {
         status: 'REFUNDED',
@@ -558,7 +554,7 @@ class PaymentService {
   private async processPayPalRefund(payment: any, amount: number, reason?: string): Promise<any> {
     // PayPal refund logic would go here
     // This is a simplified version
-    await this.prisma.payment.update({
+    await db.payments.update({
       where: { id: payment.id },
       data: {
         status: 'REFUNDED',
@@ -574,22 +570,22 @@ class PaymentService {
   }
 
   private async processWalletRefund(payment: any, amount: number, reason?: string): Promise<any> {
-    await this.prisma.$transaction(async (tx) => {
+    await db.$transaction(async (tx: any) => {
       // Return money to sender
-      await tx.wallet.update({
+      await tx.wallets.update({
         where: { userId: payment.fromUserId },
         data: { balance: { increment: amount } }
       });
 
       // Deduct from recipient
       if (payment.toUserId) {
-        await tx.wallet.update({
+        await tx.wallets.update({
           where: { userId: payment.toUserId },
           data: { balance: { decrement: amount } }
         });
       }
 
-      await tx.payment.update({
+      await tx.payments.update({
         where: { id: payment.id },
         data: {
           status: 'REFUNDED',

@@ -1,7 +1,5 @@
 import axios from 'axios';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, db } from '../utils/prismaClient';
 
 interface SocialProfile {
   id: string;
@@ -29,7 +27,7 @@ interface SocialPost {
 }
 
 class SocialIntegrationService {
-  private prisma: PrismaClient;
+  private prisma: any;
 
   constructor() {
     this.prisma = prisma;
@@ -41,7 +39,7 @@ class SocialIntegrationService {
       const profile = await this.getGitHubProfile(accessToken);
       const repos = await this.getGitHubRepos(accessToken);
 
-      await this.prisma.socialIntegration.upsert({
+  await db.socialIntegration.upsert({
         where: {
           userId_platform: {
             userId,
@@ -114,7 +112,7 @@ class SocialIntegrationService {
       .slice(0, 10)
       .map(([language]) => language);
 
-    await this.prisma.user.update({
+  await db.users.update({
       where: { id: userId },
       data: { skills: topSkills }
     });
@@ -125,7 +123,7 @@ class SocialIntegrationService {
     try {
       const profile = await this.getLinkedInProfile(accessToken);
 
-      await this.prisma.socialIntegration.upsert({
+  await db.socialIntegration.upsert({
         where: {
           userId_platform: {
             userId,
@@ -174,7 +172,7 @@ class SocialIntegrationService {
     try {
       const profile = await this.getTwitterProfile(accessToken);
 
-      await this.prisma.socialIntegration.upsert({
+  await db.socialIntegration.upsert({
         where: {
           userId_platform: {
             userId,
@@ -234,7 +232,7 @@ class SocialIntegrationService {
     try {
       const profile = await this.getDiscordProfile(accessToken);
 
-      await this.prisma.socialIntegration.upsert({
+  await db.socialIntegration.upsert({
         where: {
           userId_platform: {
             userId,
@@ -283,7 +281,7 @@ class SocialIntegrationService {
 
   // Generic social sharing
   async shareToSocialPlatforms(userId: string, content: string, platforms: string[]): Promise<void> {
-    const integrations = await this.prisma.socialIntegration.findMany({
+  const integrations = await db.socialIntegration.findMany({
       where: {
         userId,
         platform: { in: platforms as any },
@@ -291,7 +289,7 @@ class SocialIntegrationService {
       }
     });
 
-    const sharePromises = integrations.map(integration =>
+    const sharePromises = integrations.map((integration: any) =>
       this.shareToPlatform(integration, content)
     );
 
@@ -336,7 +334,7 @@ class SocialIntegrationService {
 
   // Get user's connected platforms
   async getConnectedPlatforms(userId: string): Promise<any[]> {
-    return await this.prisma.socialIntegration.findMany({
+  return await db.socialIntegration.findMany({
       where: {
         userId,
         isConnected: true
@@ -351,7 +349,7 @@ class SocialIntegrationService {
 
   // Disconnect platform
   async disconnectPlatform(userId: string, platform: string): Promise<void> {
-    await this.prisma.socialIntegration.updateMany({
+  await db.socialIntegration.updateMany({
       where: {
         userId,
         platform: platform as any
@@ -366,7 +364,7 @@ class SocialIntegrationService {
 
   // Sync social media data
   async syncSocialData(userId: string): Promise<void> {
-    const integrations = await this.prisma.socialIntegration.findMany({
+  const integrations = await db.socialIntegration.findMany({
       where: {
         userId,
         isConnected: true
@@ -394,7 +392,7 @@ class SocialIntegrationService {
             continue;
         }
 
-          await this.prisma.socialIntegration.update({
+          await db.socialIntegration.update({
           where: {
             userId_platform: {
               userId,

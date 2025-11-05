@@ -1,5 +1,9 @@
 import { Post, Comment, Social } from '../api';
 import { cloudinary } from '../utils/config';
+import { PostType } from '../types/posts';
+import { db } from '../utils/prismaClient';
+
+type SocialNotificationType = 'FOLLOW' | 'LIKE' | 'COMMENT' | 'REPLY' | 'PROJECT_INVITE' | 'PROJECT_UPDATE' | 'MESSAGE' | 'SYSTEM';
 
 class PostService {
   private postModel: Post;
@@ -16,7 +20,7 @@ class PostService {
   async createPost(postData: {
     title: string;
     content?: string;
-    postType: 'TEXT' | 'IMAGE' | 'LINK' | 'PROJECT';
+    postType: PostType;
     tags?: string[];
     categoryId?: string;
     authorId: string;
@@ -36,12 +40,11 @@ class PostService {
     const post = await this.postModel.create({
       title: postData.title.trim(),
       content: postData.content?.trim(),
-      postType: postData.postType,
+      post_type: postData.postType,
       tags: postData.tags || [],
-      authorId: postData.authorId,
-      categoryId: postData.categoryId,
-      imageLink: postData.imageLink,
-      imageId: postData.imageId,
+      author_id: postData.authorId,
+      category_ids: postData.categoryId ? [postData.categoryId] : undefined,
+      media_ids: postData.imageId ? [postData.imageId] : undefined
     });
 
     // Award tokens for posting
@@ -129,19 +132,29 @@ class PostService {
 
   // Verify post (admin only)
   async verifyPost(id: string, verifiedBy: string) {
-    await this.postModel.verifyPost(id, verifiedBy);
+    const post = await this.postModel.findById(id);
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    // Update post status
+    await db.posts.update({
+      where: { id },
+      data: {
+        is_verified: true,
+        verified_by: verifiedBy,
+        verified_at: new Date(),
+      }
+    });
 
     // Create notification for post author
-    const post = await this.postModel.findById(id);
-    if (post) {
-      await this.socialModel.createNotification({
-        userId: post.authorId,
-        type: 'SYSTEM',
-        title: 'Post Verified',
-        message: 'Your post has been verified and is now visible to all users',
-        postId: id,
-      });
-    }
+    await this.socialModel.createNotification({
+      user_id: post.author_id,
+      type: 'MESSAGE' as const, 
+      title: 'Post Verified',
+      message: 'Your post has been verified and is now visible to all users',
+      post_id: id,
+    });
 
     return { message: 'Post verified successfully' };
   }

@@ -1,9 +1,7 @@
-import { PrismaClient, ChatRoom as PrismaChatRoom, Message as PrismaMessage, ChatType, MessageType } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, db } from '../utils/prismaClient';
 
 export class Chat {
-  private prisma: PrismaClient;
+  private prisma: any;
 
   constructor() {
     this.prisma = prisma;
@@ -80,18 +78,18 @@ export class Chat {
       }
     });
 
-    return chatRooms.map(member => ({
+    return chatRooms.map((member: any) => ({
       id: member.chatRoom.id,
       name: member.chatRoom.name,
       type: member.chatRoom.type,
-      members: member.chatRoom.members.map(m => m.user),
+      members: member.chatRoom.members.map((m: any) => m.user),
       lastMessage: member.chatRoom.messages[0] || null,
       joinedAt: member.joinedAt,
     }));
   }
 
   // Create direct chat
-  async createDirectChat(userId: string, otherUserId: string): Promise<PrismaChatRoom> {
+  async createDirectChat(userId: string, otherUserId: string): Promise<any> {
     // Check if direct chat already exists
     const existingChat = await this.prisma.chatRoom.findFirst({
       where: {
@@ -140,7 +138,7 @@ export class Chat {
   }
 
   // Create group chat
-  async createGroupChat(creatorId: string, name: string, memberIds: string[]): Promise<PrismaChatRoom> {
+  async createGroupChat(creatorId: string, name: string, memberIds: string[]): Promise<any> {
     // Add creator to members if not included
     const allMemberIds = [...new Set([...memberIds, creatorId])];
 
@@ -170,7 +168,7 @@ export class Chat {
   }
 
   // Send message
-  async sendMessage(chatId: string, senderId: string, content: string, messageType: MessageType = 'TEXT'): Promise<PrismaMessage> {
+  async sendMessage(chatId: string, senderId: string, content: string, messageType: any = 'TEXT'): Promise<any> {
     // Check if user is member of this chat
     const membership = await this.prisma.chatRoomMember.findFirst({
       where: {
@@ -284,13 +282,13 @@ export class Chat {
       throw new Error('Group chat not found');
     }
 
-    const isMember = chat.members.some(m => m.userId === adderId);
+  const isMember = chat.members.some((m: any) => m.userId === adderId);
     if (!isMember) {
       throw new Error('Access denied');
     }
 
     // Check if new member is already in chat
-    const alreadyMember = chat.members.some(m => m.userId === newMemberId);
+  const alreadyMember = chat.members.some((m: any) => m.userId === newMemberId);
     if (alreadyMember) {
       throw new Error('User is already a member of this chat');
     }
@@ -315,12 +313,12 @@ export class Chat {
     }
 
     // Only group members can remove others (or self)
-    const isMember = chat.members.some(m => m.userId === removerId);
+  const isMember = chat.members.some((m: any) => m.userId === removerId);
     if (!isMember) {
       throw new Error('Access denied');
     }
 
-    const memberToRemove = chat.members.find(m => m.userId === memberId);
+  const memberToRemove = chat.members.find((m: any) => m.userId === memberId);
     if (!memberToRemove) {
       throw new Error('User is not a member of this chat');
     }
@@ -341,7 +339,7 @@ export class Chat {
       throw new Error('Group chat not found');
     }
 
-    const isMember = chat.members.some(m => m.userId === updaterId);
+  const isMember = chat.members.some((m: any) => m.userId === updaterId);
     if (!isMember) {
       throw new Error('Access denied');
     }

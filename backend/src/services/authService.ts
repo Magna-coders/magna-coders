@@ -2,22 +2,20 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 // import speakeasy from 'speakeasy';
 // import qrcode from 'qrcode';
-import { PrismaClient } from '@prisma/client';
 import { SECRET } from '../utils/config';
-
-const prisma = new PrismaClient();
+import { prisma, db } from '../utils/prismaClient';
 
 class AuthService {
-  private prisma: PrismaClient;
+  private prisma: any;
   private userModel: any;
 
   constructor() {
     this.prisma = prisma;
     // lightweight userModel wrapper to keep older code paths working
     this.userModel = {
-      findById: async (id: string) => this.prisma.user.findUnique({ where: { id } }),
-      update: async (id: string, data: any) => this.prisma.user.update({ where: { id }, data }),
-      getProfile: async (id: string) => this.prisma.user.findUnique({
+      findById: async (id: string) => (this.prisma as any).users.findUnique({ where: { id } } as any),
+      update: async (id: string, data: any) => (this.prisma as any).users.update({ where: { id }, data } as any),
+      getProfile: async (id: string) => (this.prisma as any).users.findUnique({
         where: { id },
         select: {
           id: true,
@@ -44,12 +42,12 @@ class AuthService {
           },
           createdAt: true,
         }
-      }),
-      verifyUser: async (id: string, badge?: string) => this.prisma.user.update({ where: { id }, data: { isVerified: true, verificationBadge: badge || null } }),
-      awardTokens: async (id: string, amount: number) => this.prisma.user.update({ where: { id }, data: { tokens: { increment: amount } } }),
+      } as any),
+      verifyUser: async (id: string, badge?: string) => (this.prisma as any).users.update({ where: { id }, data: { isVerified: true, verificationBadge: badge || null } } as any),
+      awardTokens: async (id: string, amount: number) => (this.prisma as any).users.update({ where: { id }, data: { tokens: { increment: amount } } } as any),
       awardKarma: async (id: string, type: 'post' | 'comment', amount: number) => {
-        if (type === 'post') return this.prisma.user.update({ where: { id }, data: { postKarma: { increment: amount } } });
-        return this.prisma.user.update({ where: { id }, data: { commentKarma: { increment: amount } } });
+        if (type === 'post') return (this.prisma as any).users.update({ where: { id }, data: { postKarma: { increment: amount } } } as any);
+        return (this.prisma as any).users.update({ where: { id }, data: { commentKarma: { increment: amount } } } as any);
       }
     };
   }
@@ -63,7 +61,7 @@ class AuthService {
     role?: 'DEVELOPER' | 'CLIENT' | 'ADMIN';
   }) {
     // Check if user already exists
-    const existingUser = await this.prisma.user.findFirst({
+    const existingUser = await (this.prisma as any).users.findFirst({
       where: {
         OR: [
           { username: { equals: userData.username, mode: 'insensitive' } },
@@ -82,7 +80,7 @@ class AuthService {
     const passwordHash = await bcrypt.hash(userData.password, saltRounds);
 
     // Create user
-    const user = await this.prisma.user.create({
+    const user = await (this.prisma as any).users.create({
       data: {
         username: userData.username,
         email: userData.email,
@@ -109,7 +107,7 @@ class AuthService {
 
   // Login user with security checks
   async login(credentials: { username: string; password: string; otp?: string }) {
-    const user = await this.prisma.user.findFirst({
+    const user = await (this.prisma as any).users.findFirst({
       where: {
         username: { equals: credentials.username, mode: 'insensitive' }
       }
@@ -127,14 +125,14 @@ class AuthService {
     const isValidPassword = await bcrypt.compare(credentials.password, user.passwordHash);
     if (!isValidPassword) {
       // Increment login attempts
-      await this.prisma.user.update({
+      await db.users.update({
         where: { id: user.id },
         data: { loginAttempts: { increment: 1 } }
       });
 
       // Lock account after 5 failed attempts
       if (user.loginAttempts >= 4) {
-        await this.prisma.user.update({
+        await db.users.update({
           where: { id: user.id },
           data: {
             lockedUntil: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
@@ -160,7 +158,7 @@ class AuthService {
     }
 
     // Reset login attempts on successful login
-    await this.prisma.user.update({
+    await (this.prisma as any).users.update({
       where: { id: user.id },
       data: {
         loginAttempts: 0,
@@ -187,7 +185,7 @@ class AuthService {
 
   // Enable 2FA
   async enable2FA(userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+  const user = await (this.prisma as any).users.findUnique({ where: { id: userId } } as any);
     if (!user) {
       throw new Error('User not found');
     }
@@ -204,7 +202,7 @@ class AuthService {
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`;
 
     // Update user with temp secret (not yet enabled)
-    await this.prisma.user.update({
+    await (this.prisma as any).users.update({
       where: { id: userId },
       data: { twoFactorSecret: secret }
     });

@@ -2,8 +2,19 @@ import nodemailer from 'nodemailer';
 import twilio from 'twilio';
 import { PrismaClient } from '@prisma/client';
 import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } from '../utils/config';
+import { db } from '../utils/prismaClient';
 
-const prisma = new PrismaClient();
+/**
+ * Local NotificationType enum added because ../types/notifications is missing.
+ * Update or replace with your canonical types file when available.
+ */
+export enum NotificationType {
+  SYSTEM = 'SYSTEM',
+  PROJECT_BID = 'PROJECT_BID',
+  PROJECT_ASSIGNED = 'PROJECT_ASSIGNED',
+  MESSAGE = 'MESSAGE',
+  COMMENT = 'COMMENT'
+}
 
 // Email configuration
 const emailTransporter = nodemailer.createTransporter({
@@ -24,11 +35,7 @@ const twilioClient = twilio(
 const whatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 
 class NotificationService {
-  private prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = prisma;
-  }
+  constructor() {}
 
   // Send email notification
   async sendEmail(to: string, subject: string, html: string, text?: string): Promise<void> {
@@ -116,7 +123,7 @@ class NotificationService {
   // Create in-app notification
   async createInAppNotification(data: {
     userId: string;
-    type: 'LIKE' | 'COMMENT' | 'FOLLOW' | 'PROJECT_BID' | 'PROJECT_ASSIGNED' | 'PROJECT_COMPLETED' | 'MESSAGE' | 'SYSTEM';
+    type: NotificationType;
     title: string;
     message: string;
     postId?: string;
@@ -124,17 +131,17 @@ class NotificationService {
     projectId?: string;
     messageId?: string;
   }): Promise<void> {
-    await this.prisma.notification.create({
+    await db.notifications.create({
       data: {
-        userId: data.userId,
-        type: data.type,
         title: data.title,
         message: data.message,
-        postId: data.postId,
-        commentId: data.commentId,
-        projectId: data.projectId,
-        messageId: data.messageId,
-      },
+        user_id: data.userId,
+        type: data.type,
+        post_id: data.postId,
+        comment_id: data.commentId,
+        project_id: data.projectId,
+        message_id: data.messageId
+      }
     });
   }
 
@@ -143,7 +150,7 @@ class NotificationService {
     // In-app notification
     await this.createInAppNotification({
       userId,
-      type: 'SYSTEM',
+      type: NotificationType.SYSTEM,
       title: 'Welcome to Magna Coders!',
       message: 'Thank you for joining our community. Start exploring projects and connecting with developers!',
     });
@@ -185,14 +192,14 @@ class NotificationService {
 
   // Send project bid notification
   async sendProjectBidNotification(projectOwnerId: string, bidderName: string, projectTitle: string, bidAmount: number): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { id: projectOwnerId } });
+    const user = await db.users.findUnique({ where: { id: projectOwnerId } });
 
     if (!user) return;
 
     // In-app notification
     await this.createInAppNotification({
       userId: projectOwnerId,
-      type: 'PROJECT_BID',
+      type: NotificationType.PROJECT_BID,
       title: 'New Project Bid',
       message: `${bidderName} placed a bid of $${bidAmount} on your project "${projectTitle}"`,
     });
@@ -230,14 +237,14 @@ class NotificationService {
 
   // Send project assignment notification
   async sendProjectAssignmentNotification(developerId: string, projectTitle: string, clientName: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { id: developerId } });
+    const user = await db.users.findUnique({ where: { id: developerId } });
 
     if (!user) return;
 
     // In-app notification
     await this.createInAppNotification({
       userId: developerId,
-      type: 'PROJECT_ASSIGNED',
+      type: NotificationType.PROJECT_ASSIGNED,
       title: 'Project Assigned!',
       message: `Congratulations! You've been assigned to project "${projectTitle}" by ${clientName}`,
     });
@@ -279,14 +286,14 @@ class NotificationService {
 
   // Send security alert (2FA, login from new device, etc.)
   async sendSecurityAlert(userId: string, alertType: string, details: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await db.users.findUnique({ where: { id: userId } });
 
     if (!user) return;
 
     // In-app notification
     await this.createInAppNotification({
       userId,
-      type: 'SYSTEM',
+      type: NotificationType.SYSTEM,
       title: 'Security Alert',
       message: `Security alert: ${alertType}. ${details}`,
     });
@@ -331,18 +338,18 @@ class NotificationService {
 
   // Bulk notification sender
   async sendBulkNotification(userIds: string[], notification: {
-    type: string;
+    type: NotificationType;
     title: string;
     message: string;
   }): Promise<void> {
     const notifications = userIds.map(userId => ({
-      userId,
-      type: notification.type as any,
+      user_id: userId,
+      type: notification.type,
       title: notification.title,
       message: notification.message,
     }));
 
-    await this.prisma.notification.createMany({
+    await db.notifications.createMany({
       data: notifications,
     });
   }

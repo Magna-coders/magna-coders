@@ -9,6 +9,7 @@ const paypalClient = new paypal.core.PayPalHttpClient(
   )
 );
 
+import { PaymentStatus } from '../../types/payments';
 const paymentService = new PaymentService();
 
 // PayPal webhook handler
@@ -29,7 +30,7 @@ const handlePayPalWebhook = async (req: Request, res: Response): Promise<void> =
         {
           const captureId = event.resource && event.resource.id ? event.resource.id : undefined;
           if (captureId) {
-            await paymentService.confirmPayPalPayment(captureId, 'COMPLETED');
+            await paymentService.confirmPayPalPayment(captureId, PaymentStatus.COMPLETED);
             console.log(`PayPal payment ${captureId} completed`);
           } else {
             console.log('PayPal PAYMENT.CAPTURE.COMPLETED received without resource.id');
@@ -41,7 +42,7 @@ const handlePayPalWebhook = async (req: Request, res: Response): Promise<void> =
         {
           const deniedId = event.resource && event.resource.id ? event.resource.id : undefined;
           if (deniedId) {
-            await paymentService.confirmPayPalPayment(deniedId, 'FAILED');
+            await paymentService.confirmPayPalPayment(deniedId, PaymentStatus.FAILED);
             console.log(`PayPal payment ${deniedId} denied`);
           } else {
             console.log('PayPal PAYMENT.CAPTURE.DENIED received without resource.id');
@@ -120,7 +121,7 @@ const capturePayPalOrder = async (req: Request, res: Response): Promise<void> =>
     const capture = await paypalClient.execute(request);
 
     // Update payment status
-    await paymentService.confirmPayPalPayment(orderId, 'COMPLETED');
+    await paymentService.confirmPayPalPayment(orderId, PaymentStatus.COMPLETED);
 
     res.status(200).json({
       success: true,

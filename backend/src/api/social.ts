@@ -1,9 +1,11 @@
-import { PrismaClient, Follow as PrismaFollow, Like as PrismaLike, Notification as PrismaNotification } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { prisma, db } from '../utils/prismaClient';
 
-const prisma = new PrismaClient();
+// Type definitions matching the schema
+type NotificationType = 'FOLLOW' | 'LIKE' | 'COMMENT' | 'REPLY' | 'PROJECT_INVITE' | 'PROJECT_UPDATE' | 'MESSAGE';
 
 export class Social {
-  private prisma: PrismaClient;
+  private prisma: any;
 
   constructor() {
     this.prisma = prisma;
@@ -15,34 +17,32 @@ export class Social {
       throw new Error('Cannot follow yourself');
     }
 
-    const existingFollow = await this.prisma.follow.findUnique({
+    const existingFollow = await db.follows.findFirst({
       where: {
-        followerId_followingId: {
-          followerId,
-          followingId,
-        }
+        follower_id: followerId,
+        following_id: followingId
       }
     });
 
     if (existingFollow) {
       // Unfollow
-      await this.prisma.follow.delete({ where: { id: existingFollow.id } });
+      await db.follows.delete({ where: { id: existingFollow.id } });
       return { following: false };
     } else {
       // Follow
-      await this.prisma.follow.create({
+      await db.follows.create({
         data: {
-          followerId,
-          followingId,
+          follower_id: followerId,
+          following_id: followingId,
         }
       });
 
       // Create notification
       await this.createNotification({
-        userId: followingId,
+        user_id: followingId,
         type: 'FOLLOW',
         title: 'New Follower',
-        message: 'Someone started following you',
+        message: 'A new user started following you',
       });
 
       return { following: true };
@@ -56,8 +56,8 @@ export class Social {
   } = {}) {
     const { page = 1, limit = 20 } = options;
 
-    const followers = await this.prisma.follow.findMany({
-      where: { followingId: userId },
+    const followers = await db.follows.findMany({
+      where: { following_id: userId },
       take: limit,
       skip: (page - 1) * limit,
       include: {
@@ -65,14 +65,17 @@ export class Social {
           select: {
             id: true,
             username: true,
-            avatar: true,
+            avatar_url: true,
             bio: true,
-            isVerified: true,
-            verificationBadge: true,
+            profile_complete_percentage: true,
             _count: {
               select: {
-                followers: true,
-                following: true,
+                followers: {
+                  where: { following_id: userId }
+                },
+                following: {
+                  where: { follower_id: userId }
+                }
               }
             }
           }
@@ -80,10 +83,10 @@ export class Social {
       }
     });
 
-    return followers.map(f => ({
-      ...f.follower,
-      followersCount: f.follower._count.followers,
-      followingCount: f.follower._count.following,
+    return followers.map((follow: any) => ({
+      ...follow.follower,
+      followersCount: follow.follower._count.followers,
+      followingCount: follow.follower._count.following,
       _count: undefined,
     }));
   }
@@ -95,8 +98,8 @@ export class Social {
   } = {}) {
     const { page = 1, limit = 20 } = options;
 
-    const following = await this.prisma.follow.findMany({
-      where: { followerId: userId },
+    const following = await db.follows.findMany({
+      where: { follower_id: userId },
       take: limit,
       skip: (page - 1) * limit,
       include: {
@@ -104,14 +107,17 @@ export class Social {
           select: {
             id: true,
             username: true,
-            avatar: true,
+            avatar_url: true,
             bio: true,
-            isVerified: true,
-            verificationBadge: true,
+            profile_complete_percentage: true,
             _count: {
               select: {
-                followers: true,
-                following: true,
+                followers: {
+                  where: { following_id: userId }
+                },
+                following: {
+                  where: { follower_id: userId }
+                }
               }
             }
           }
@@ -119,10 +125,10 @@ export class Social {
       }
     });
 
-    return following.map(f => ({
-      ...f.following,
-      followersCount: f.following._count.followers,
-      followingCount: f.following._count.following,
+    return following.map((follow: any) => ({
+      ...follow.following,
+      followersCount: follow.following._count.followers,
+      followingCount: follow.following._count.following,
       _count: undefined,
     }));
   }
@@ -135,23 +141,22 @@ export class Social {
     const { page = 1, limit = 20 } = options;
 
     // Get users that current user follows
-    const following = await this.prisma.follow.findMany({
-      where: { followerId: userId },
-      select: { followingId: true }
+    const following = await db.follows.findMany({
+      where: { follower_id: userId },
+      select: { following_id: true }
     });
 
-    const followingIds = following.map(f => f.followingId);
+    const followingIds = following.map((follow: any) => follow.following_id);
 
     // Include user's own posts and posts from followed users
-    const posts = await this.prisma.post.findMany({
+    const posts = await db.posts.findMany({
       where: {
         OR: [
-          { authorId: { in: [...followingIds, userId] } },
-          { authorId: userId }
-        ],
-        isVerified: true,
+          { author_id: { in: [...followingIds, userId] } },
+          { author_id: userId }
+        ]
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
       take: limit,
       skip: (page - 1) * limit,
       include: {
@@ -159,16 +164,18 @@ export class Social {
           select: {
             id: true,
             username: true,
-            avatar: true,
-            isVerified: true,
-            verificationBadge: true,
+            avatar_url: true,
+            profile_complete_percentage: true
           }
         },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            icon: true,
+        categories: {
+          include: {
+            categories: true
+          }
+        },
+        post_media: {
+          include: {
+            media: true
           }
         },
         _count: {
@@ -180,7 +187,7 @@ export class Social {
       }
     });
 
-    return posts.map(post => ({
+    return posts.map((post: any) => ({
       ...post,
       commentsCount: post._count.comments,
       likesCount: post._count.likes,
@@ -190,48 +197,48 @@ export class Social {
 
   // Like/unlike content (post, comment, or reply)
   async toggleLike(userId: string, contentType: 'post' | 'comment' | 'reply', contentId: string): Promise<{ liked: boolean }> {
-    const where: any = { userId };
+    const where: any = { user_id: userId };
     let updateData: any = {};
 
     switch (contentType) {
       case 'post':
-        where.postId = contentId;
-        updateData = { post: { connect: { id: contentId } } };
+        where.post_id = contentId;
+        updateData = { posts: { connect: { id: contentId } } };
         break;
       case 'comment':
-        where.commentId = contentId;
-        updateData = { comment: { connect: { id: contentId } } };
+        where.comment_id = contentId;
+        updateData = { comments: { connect: { id: contentId } } };
         break;
       case 'reply':
-        where.replyId = contentId;
-        updateData = { reply: { connect: { id: contentId } } };
+        where.reply_id = contentId;
+        updateData = { comment_replies: { connect: { id: contentId } } };
         break;
     }
 
-    const existingLike = await this.prisma.like.findFirst({ where });
+    const existingLike = await db.likes.findFirst({ where });
 
     if (existingLike) {
       // Unlike
-      await this.prisma.like.delete({ where: { id: existingLike.id } });
+      await db.likes.delete({ where: { id: existingLike.id } });
 
       // Decrement likes count
       switch (contentType) {
         case 'post':
-          await this.prisma.post.update({
+          await db.posts.update({
             where: { id: contentId },
-            data: { likesCount: { decrement: 1 } }
+            data: { likes_count: { decrement: 1 } }
           });
           break;
         case 'comment':
-          await this.prisma.comment.update({
+          await db.comments.update({
             where: { id: contentId },
-            data: { likesCount: { decrement: 1 } }
+            data: { likes_count: { decrement: 1 } }
           });
           break;
         case 'reply':
-          await this.prisma.reply.update({
+          await db.comment_replies.update({
             where: { id: contentId },
-            data: { likesCount: { decrement: 1 } }
+            data: { likes_count: { decrement: 1 } }
           });
           break;
       }
@@ -239,9 +246,9 @@ export class Social {
       return { liked: false };
     } else {
       // Like
-      await this.prisma.like.create({
+      await db.likes.create({
         data: {
-          userId,
+          user_id: userId,
           ...updateData,
         }
       });
@@ -249,21 +256,21 @@ export class Social {
       // Increment likes count
       switch (contentType) {
         case 'post':
-          await this.prisma.post.update({
+          await db.posts.update({
             where: { id: contentId },
-            data: { likesCount: { increment: 1 } }
+            data: { likes_count: { increment: 1 } }
           });
           break;
         case 'comment':
-          await this.prisma.comment.update({
+          await db.comments.update({
             where: { id: contentId },
-            data: { likesCount: { increment: 1 } }
+            data: { likes_count: { increment: 1 } }
           });
           break;
         case 'reply':
-          await this.prisma.reply.update({
+          await db.comment_replies.update({
             where: { id: contentId },
-            data: { likesCount: { increment: 1 } }
+            data: { likes_count: { increment: 1 } }
           });
           break;
       }
@@ -274,25 +281,25 @@ export class Social {
 
   // Create notification
   async createNotification(data: {
-    userId: string;
-    type: string;
+    user_id: string;
+    type: NotificationType;
     title: string;
     message: string;
-    postId?: string;
-    commentId?: string;
-    projectId?: string;
-    messageId?: string;
-  }): Promise<PrismaNotification> {
-    return await this.prisma.notification.create({
+    post_id?: string;
+    comment_id?: string;
+    project_id?: string;
+    message_id?: string;
+  }) {
+    return await db.notifications.create({
       data: {
-        userId: data.userId,
-        type: data.type as any,
+        user_id: data.user_id,
+        type: data.type,
         title: data.title,
         message: data.message,
-        postId: data.postId,
-        commentId: data.commentId,
-        projectId: data.projectId,
-        messageId: data.messageId,
+        post_id: data.post_id,
+        comment_id: data.comment_id,
+        project_id: data.project_id,
+        message_id: data.message_id,
       }
     });
   }
@@ -305,26 +312,33 @@ export class Social {
   } = {}) {
     const { page = 1, limit = 20, unreadOnly = false } = options;
 
-    const where: any = { userId };
+    const where: any = { user_id: userId };
     if (unreadOnly) {
-      where.isRead = false;
+      where.read_at = null;
     }
 
-    const notifications = await this.prisma.notification.findMany({
+    const notifications = await db.notifications.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
       take: limit,
       skip: (page - 1) * limit,
+      include: {
+        users: true,
+        posts: true,
+        comments: true,
+        projects: true,
+        messages: true
+      }
     });
 
     // Mark as read if getting all notifications
     if (!unreadOnly) {
-      await this.prisma.notification.updateMany({
+      await db.notifications.updateMany({
         where: {
-          userId,
-          isRead: false,
+          user_id: userId,
+          read_at: null
         },
-        data: { isRead: true }
+        data: { read_at: new Date() }
       });
     }
 
@@ -333,10 +347,10 @@ export class Social {
 
   // Get unread notification count
   async getUnreadNotificationCount(userId: string): Promise<number> {
-    return await this.prisma.notification.count({
+    return await db.notifications.count({
       where: {
-        userId,
-        isRead: false,
+        user_id: userId,
+        read_at: null
       }
     });
   }
@@ -345,77 +359,142 @@ export class Social {
   async searchUsers(query: string, options: {
     page?: number;
     limit?: number;
+    roleId?: string;
+    skillId?: string;
+    categoryId?: string;
   } = {}) {
-    const { page = 1, limit = 20 } = options;
+    const { page = 1, limit = 20, roleId, skillId, categoryId } = options;
 
-    const users = await this.prisma.user.findMany({
-      where: {
-        OR: [
-          {
-            username: {
-              contains: query,
-              mode: 'insensitive'
-            }
-          },
-          {
-            email: {
-              contains: query,
-              mode: 'insensitive'
-            }
+    const where: any = {
+      OR: [
+        {
+          username: {
+            contains: query,
+            mode: 'insensitive'
           }
-        ]
-      },
-      take: limit,
-      skip: (page - 1) * limit,
-      select: {
-        id: true,
-        username: true,
-        avatar: true,
-        bio: true,
-        isVerified: true,
-        verificationBadge: true,
-        role: true,
-        skills: true,
-        _count: {
-          select: {
-            posts: true,
-            followers: true,
+        },
+        {
+          email: {
+            contains: query,
+            mode: 'insensitive'
+          }
+        },
+        {
+          bio: {
+            contains: query,
+            mode: 'insensitive'
           }
         }
-      }
-    });
+      ]
+    };
 
-    return users.map(user => ({
-      ...user,
-      postsCount: user._count.posts,
-      followersCount: user._count.followers,
-      _count: undefined,
-    }));
+    if (roleId) {
+      where.roles = {
+        some: { role_id: roleId }
+      };
+    }
+
+    if (skillId) {
+      where.skills = {
+        some: { skill_id: skillId }
+      };
+    }
+
+    if (categoryId) {
+      where.categories = {
+        some: { category_id: categoryId }
+      };
+    }
+
+    const [users, totalCount] = await Promise.all([
+      db.users.findMany({
+        where,
+        take: limit,
+        skip: (page - 1) * limit,
+        include: {
+          roles: {
+            include: {
+              roles: true
+            }
+          },
+          skills: {
+            include: {
+              skills: true
+            }
+          },
+          categories: {
+            include: {
+              categories: true
+            }
+          },
+          _count: {
+            select: {
+              posts: true,
+              followers: true,
+              following: true
+            }
+          }
+        }
+      }),
+      db.users.count({ where })
+    ]);
+
+    return {
+      users: users.map((user: any) => ({
+        ...user,
+        postsCount: user._count.posts,
+        followersCount: user._count.followers,
+        followingCount: user._count.following,
+        _count: undefined,
+      })),
+      totalCount,
+      page,
+      limit
+    };
   }
 
   // Report content
   async reportContent(data: {
-    reporterId: string;
+    reporter_id: string;
     reason: string;
     description?: string;
-    contentType: 'user' | 'post';
-    contentId: string;
+    content_type: 'USER' | 'POST' | 'COMMENT' | 'REPLY';
+    content_id: string;
   }) {
     const reportData: any = {
-      reporterId: data.reporterId,
+      reporter_id: data.reporter_id,
       reason: data.reason,
       description: data.description,
       status: 'PENDING',
+      created_at: new Date()
     };
 
-    if (data.contentType === 'user') {
-      reportData.reportedUserId = data.contentId;
-    } else if (data.contentType === 'post') {
-      reportData.reportedPostId = data.contentId;
+    switch (data.content_type) {
+      case 'USER':
+        reportData.reported_user_id = data.content_id;
+        break;
+      case 'POST':
+        reportData.reported_post_id = data.content_id;
+        break;
+      case 'COMMENT':
+        reportData.reported_comment_id = data.content_id;
+        break;
+      case 'REPLY':
+        reportData.reported_reply_id = data.content_id;
+        break;
     }
 
-    return await this.prisma.report.create({
-      data: reportData
+    return await db.reports.create({
+      data: reportData,
+      include: {
+        reporter: {
+          select: {
+            id: true,
+            username: true,
+            avatar_url: true
+          }
+        }
+      }
     });
   }
 }

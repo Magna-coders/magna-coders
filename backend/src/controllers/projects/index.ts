@@ -1,13 +1,11 @@
 import { Request, Response } from 'express';
-import { PrismaClient, ProjectStatus, BidStatus } from '@prisma/client';
+import { prisma, db } from '../../utils/prismaClient';
 import paginateResults from '../../utils/paginateResults';
-
-const prisma = new PrismaClient();
 
 const getProjects = async (req: Request, res: Response): Promise<void> => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
-  const status = req.query.status as ProjectStatus;
+  const status = req.query.status as any;
   const categoryId = req.query.category as string;
   const sortBy = req.query.sortby as string;
 
@@ -31,9 +29,9 @@ const getProjects = async (req: Request, res: Response): Promise<void> => {
   if (status) where.status = status;
   if (categoryId) where.categoryId = categoryId;
 
-  const totalCount = await prisma.project.count({ where });
+  const totalCount = await db.projects.count({ where } as any);
 
-  const projects = await prisma.project.findMany({
+  const projects = await db.projects.findMany({
     where,
     orderBy,
     take: limit,
@@ -85,9 +83,9 @@ const getProjects = async (req: Request, res: Response): Promise<void> => {
 
   const paginatedProjects = {
     previous: paginated.results.previous,
-    results: projects.map(project => ({
+    results: projects.map((project: any) => ({
       ...project,
-      bidsCount: project._count.bids,
+      bidsCount: project._count?.bids,
       _count: undefined,
     })),
     next: paginated.results.next,
@@ -99,7 +97,7 @@ const getProjects = async (req: Request, res: Response): Promise<void> => {
 const getProjectById = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
-  const project = await prisma.project.findUnique({
+  const project = await db.projects.findUnique({
     where: { id },
     include: {
       client: {
@@ -171,7 +169,7 @@ const createProject = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const client = await prisma.user.findUnique({ where: { id: userId } });
+  const client = await db.users.findUnique({ where: { id: userId } } as any);
   if (!client) {
     res.status(404).send({ message: 'User not found.' });
     return;
@@ -182,13 +180,13 @@ const createProject = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const category = await prisma.category.findUnique({ where: { id: categoryId } });
+  const category = await db.categories.findUnique({ where: { id: categoryId } } as any);
   if (!category) {
     res.status(404).send({ message: 'Category not found.' });
     return;
   }
 
-  const project = await prisma.project.create({
+  const project = await db.projects.create({
     data: {
       title,
       description,
@@ -225,7 +223,7 @@ const updateProject = async (req: Request, res: Response): Promise<void> => {
   const userId = req.user as string;
   const updates = req.body;
 
-  const project = await prisma.project.findUnique({
+  const project = await db.projects.findUnique({
     where: { id },
     include: { client: true }
   });
@@ -245,7 +243,7 @@ const updateProject = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const updatedProject = await prisma.project.update({
+  const updatedProject = await db.projects.update({
     where: { id },
     data: {
       ...updates,
@@ -275,7 +273,7 @@ const deleteProject = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const userId = req.user as string;
 
-  const project = await prisma.project.findUnique({
+  const project = await db.projects.findUnique({
     where: { id },
     include: { client: true }
   });
@@ -295,7 +293,7 @@ const deleteProject = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  await prisma.project.delete({ where: { id } });
+  await db.projects.delete({ where: { id } });
 
   res.status(204).end();
 };
@@ -310,7 +308,7 @@ const placeBid = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const project = await prisma.project.findUnique({ where: { id } });
+  const project = await db.projects.findUnique({ where: { id } } as any);
   if (!project) {
     res.status(404).send({ message: 'Project not found.' });
     return;
@@ -321,7 +319,7 @@ const placeBid = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const bidder = await prisma.user.findUnique({ where: { id: userId } });
+  const bidder = await db.users.findUnique({ where: { id: userId } } as any);
   if (!bidder) {
     res.status(404).send({ message: 'User not found.' });
     return;
@@ -333,7 +331,7 @@ const placeBid = async (req: Request, res: Response): Promise<void> => {
   }
 
   // Check if user already bid on this project
-  const existingBid = await prisma.bid.findFirst({
+  const existingBid = await db.bids.findFirst({
     where: {
       projectId: id,
       bidderId: userId,
@@ -345,7 +343,7 @@ const placeBid = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const bid = await prisma.bid.create({
+  const bid = await db.bids.create({
     data: {
       amount,
       proposal,
@@ -372,7 +370,7 @@ const acceptBid = async (req: Request, res: Response): Promise<void> => {
   const { projectId, bidId } = req.params;
   const userId = req.user as string;
 
-  const project = await prisma.project.findUnique({
+  const project = await db.projects.findUnique({
     where: { id: projectId },
     include: { client: true }
   });
@@ -387,7 +385,7 @@ const acceptBid = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const bid = await prisma.bid.findUnique({
+  const bid = await db.bids.findUnique({
     where: { id: bidId },
     include: { bidder: true }
   });
@@ -398,7 +396,7 @@ const acceptBid = async (req: Request, res: Response): Promise<void> => {
   }
 
   // Update project
-  await prisma.project.update({
+  await db.projects.update({
     where: { id: projectId },
     data: {
       assignedToId: bid.bidderId,
@@ -407,13 +405,13 @@ const acceptBid = async (req: Request, res: Response): Promise<void> => {
   });
 
   // Update bid status
-  await prisma.bid.update({
+  await db.bids.update({
     where: { id: bidId },
     data: { status: 'ACCEPTED' }
   });
 
   // Reject other bids
-  await prisma.bid.updateMany({
+  await db.bids.updateMany({
     where: {
       projectId,
       id: { not: bidId }
@@ -422,7 +420,7 @@ const acceptBid = async (req: Request, res: Response): Promise<void> => {
   });
 
   // Award tokens to developer
-  await prisma.user.update({
+  await db.users.update({
     where: { id: bid.bidderId },
     data: { tokens: { increment: 50 } }
   });

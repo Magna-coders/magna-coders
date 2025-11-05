@@ -16,6 +16,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "ts-node prisma/seed.ts",
+    "db:reset": "ts-node src/utils/dbReset.ts",
     "render-build": "npm install && npm run build && npx prisma generate",
     "render-start": "npx prisma migrate deploy && npm start"
   },

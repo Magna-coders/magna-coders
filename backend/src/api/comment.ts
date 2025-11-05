@@ -1,9 +1,7 @@
-import { PrismaClient, Comment as PrismaComment } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, db } from '../utils/prismaClient';
 
 export class Comment {
-  private prisma: PrismaClient;
+  private prisma: any;
 
   constructor() {
     this.prisma = prisma;
@@ -90,7 +88,7 @@ export class Comment {
       }
     });
 
-    return comments.map(comment => ({
+    return comments.map((comment: any) => ({
       ...comment,
       likesCount: comment._count.likes,
       repliesCount: comment._count.replies,
@@ -103,7 +101,7 @@ export class Comment {
     content: string;
     postId: string;
     authorId: string;
-  }): Promise<PrismaComment> {
+  }): Promise<any> {
     const comment = await this.prisma.comment.create({
       data: {
         content: data.content,
@@ -122,7 +120,7 @@ export class Comment {
   }
 
   // Update comment
-  async update(id: string, content: string, authorId: string): Promise<PrismaComment> {
+  async update(id: string, content: string, authorId: string): Promise<any> {
     const comment = await this.prisma.comment.findUnique({
       where: { id },
       include: { author: true }

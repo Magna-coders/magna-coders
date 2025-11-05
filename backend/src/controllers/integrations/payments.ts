@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import PaymentService from '../../services/paymentService';
+import { PaymentMethod, PaymentStatus, Currency } from '../../types/payments';
 import { asyncHandler } from '../../middleware/errorHandler';
 
 const paymentService = new PaymentService();
@@ -109,8 +110,8 @@ const walletTransfer = asyncHandler(async (req: Request, res: Response) => {
 
   const paymentData = {
     amount: parseFloat(amount),
-    currency: 'USD' as const,
-    method: 'WALLET' as const,
+    currency: Currency.USD,
+    method: PaymentMethod.WALLET,
     description: description || 'Wallet transfer',
     fromUserId: userId,
     toUserId,
@@ -130,39 +131,39 @@ const walletTransfer = asyncHandler(async (req: Request, res: Response) => {
 const getPaymentMethods = asyncHandler(async (req: Request, res: Response) => {
   const methods = [
     {
-      id: 'STRIPE',
+      id: PaymentMethod.STRIPE,
       name: 'Credit/Debit Card',
       description: 'Pay with Visa, Mastercard, or other cards',
       enabled: !!process.env.STRIPE_SECRET_KEY,
-      currencies: ['USD', 'EUR', 'GBP']
+      currencies: [Currency.USD, Currency.EUR, Currency.GBP]
     },
     {
-      id: 'PAYPAL',
+      id: PaymentMethod.PAYPAL,
       name: 'PayPal',
       description: 'Pay with your PayPal account',
       enabled: !!process.env.PAYPAL_CLIENT_ID,
-      currencies: ['USD', 'EUR', 'GBP']
+      currencies: [Currency.USD, Currency.EUR, Currency.GBP]
     },
     {
-      id: 'MPESA',
+      id: PaymentMethod.MPESA,
       name: 'M-Pesa',
       description: 'Mobile money payment (Kenya)',
       enabled: !!process.env.MPESA_CONSUMER_KEY,
-      currencies: ['KES']
+      currencies: [Currency.KES]
     },
     {
-      id: 'BANK_TRANSFER',
+      id: PaymentMethod.BANK_TRANSFER,
       name: 'Bank Transfer',
       description: 'Direct bank transfer',
       enabled: true,
-      currencies: ['USD', 'EUR', 'GBP', 'KES']
+      currencies: [Currency.USD, Currency.EUR, Currency.GBP, Currency.KES]
     },
     {
-      id: 'WALLET',
+      id: PaymentMethod.WALLET,
       name: 'Platform Wallet',
       description: 'Instant transfer using platform wallet',
       enabled: true,
-      currencies: ['USD']
+      currencies: [Currency.USD]
     }
   ];
 

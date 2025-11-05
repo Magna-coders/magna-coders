@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
-import { PrismaClient, ChatType } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { ChatType } from '../../types/chat';
+import { db } from '../../utils/prismaClient';
 
 const getUserChats = async (req: Request, res: Response): Promise<void> => {
   const userId = req.user as string;
 
-  const chatRooms = await prisma.chatRoomMember.findMany({
+  const chatRooms = await db.chat_room_members.findMany({
     where: { userId },
     include: {
       chatRoom: {
@@ -40,13 +39,31 @@ const getUserChats = async (req: Request, res: Response): Promise<void> => {
     }
   });
 
-  const formattedChats = chatRooms.map(member => ({
+  interface Member {
+    chatRoom: {
+      id: string;
+      name: string;
+      type: ChatType;
+      chat_room_members: Array<{
+        user: {
+          id: string;
+          username: string;
+          avatar_url: string;
+          profile_complete_percentage: number;
+        };
+      }>;
+      messages: any[];
+    };
+    joined_at: Date;
+  }
+
+  const formattedChats = chatRooms.map((member: Member) => ({
     id: member.chatRoom.id,
     name: member.chatRoom.name,
     type: member.chatRoom.type,
-    members: member.chatRoom.members.map(m => m.user),
+    members: member.chatRoom.chat_room_members.map(m => m.user),
     lastMessage: member.chatRoom.messages[0] || null,
-    joinedAt: member.joinedAt,
+    joinedAt: member.joined_at,
   }));
 
   res.status(200).json(formattedChats);
@@ -59,10 +76,10 @@ const getChatMessages = async (req: Request, res: Response): Promise<void> => {
   const limit = Number(req.query.limit) || 50;
 
   // Check if user is member of this chat
-  const membership = await prisma.chatRoomMember.findFirst({
+  const membership = await db.chat_room_members.findFirst({
     where: {
-      chatRoomId: chatId,
-      userId,
+      chat_room_id: chatId,
+      user_id: userId,
     }
   });
 
@@ -71,9 +88,9 @@ const getChatMessages = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const messages = await prisma.message.findMany({
-    where: { chatRoomId: chatId },
-    orderBy: { createdAt: 'desc' },
+  const messages = await db.messages.findMany({
+    where: { chat_room_id: chatId },
+    orderBy: { created_at: 'desc' },
     take: limit,
     skip: (page - 1) * limit,
     include: {
@@ -81,8 +98,8 @@ const getChatMessages = async (req: Request, res: Response): Promise<void> => {
         select: {
           id: true,
           username: true,
-          avatar: true,
-          isVerified: true,
+          avatar_url: true,
+          profile_complete_percentage: true
         }
       }
     }
@@ -102,8 +119,8 @@ const createDirectChat = async (req: Request, res: Response): Promise<void> => {
 
   // Check if users exist
   const [user, otherUser] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId } }),
-    prisma.user.findUnique({ where: { id: otherUserId } })
+    db.users.findUnique({ where: { id: userId } }),
+    db.users.findUnique({ where: { id: otherUserId } })
   ]);
 
   if (!user || !otherUser) {
@@ -112,45 +129,45 @@ const createDirectChat = async (req: Request, res: Response): Promise<void> => {
   }
 
   // Check if direct chat already exists
-  const existingChat = await prisma.chatRoom.findFirst({
+  const existingChat = await db.chat_rooms.findFirst({
     where: {
-      type: 'DIRECT',
-      members: {
+      type: ChatType.DIRECT,
+      chat_room_members: {
         every: {
-          userId: { in: [userId, otherUserId] }
+          user_id: { in: [userId, otherUserId] }
         }
       }
     },
     include: {
-      members: true,
+      chat_room_members: true,
     }
   });
 
-  if (existingChat && existingChat.members.length === 2) {
+  if (existingChat && existingChat.chat_room_members.length === 2) {
     res.status(200).json(existingChat);
     return;
   }
 
   // Create new direct chat
-  const chatRoom = await prisma.chatRoom.create({
+  const chatRoom = await db.chat_rooms.create({
     data: {
-      type: 'DIRECT',
-      members: {
+      type: ChatType.DIRECT,
+      chat_room_members: {
         create: [
-          { userId },
-          { userId: otherUserId }
+          { user_id: userId },
+          { user_id: otherUserId }
         ]
       }
     },
     include: {
-      members: {
+      chat_room_members: {
         include: {
           user: {
             select: {
               id: true,
               username: true,
-              avatar: true,
-              isVerified: true,
+              avatar_url: true,
+              profile_complete_percentage: true
             }
           }
         }
@@ -179,7 +196,7 @@ const createGroupChat = async (req: Request, res: Response): Promise<void> => {
   const allMemberIds = [...new Set([...memberIds, userId])];
 
   // Verify all users exist
-  const users = await prisma.user.findMany({
+  const users = await db.users.findMany({
     where: { id: { in: allMemberIds } }
   });
 
@@ -188,23 +205,23 @@ const createGroupChat = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const chatRoom = await prisma.chatRoom.create({
+  const chatRoom = await db.chat_rooms.create({
     data: {
       name,
-      type: 'GROUP',
-      members: {
-        create: allMemberIds.map(id => ({ userId: id }))
+      type: ChatType.GROUP,
+      chat_room_members: {
+        create: allMemberIds.map(id => ({ user_id: id }))
       }
     },
     include: {
-      members: {
+      chat_room_members: {
         include: {
           user: {
             select: {
               id: true,
               username: true,
-              avatar: true,
-              isVerified: true,
+              avatar_url: true,
+              profile_complete_percentage: true
             }
           }
         }
@@ -225,11 +242,11 @@ const sendMessage = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  // Check if user is member of this chat or not
-  const membership = await prisma.chatRoomMember.findFirst({
+  // Check if user is member of this chat
+  const membership = await db.chat_room_members.findFirst({
     where: {
-      chatRoomId: chatId,
-      userId,
+      chat_room_id: chatId,
+      user_id: userId,
     }
   });
 
@@ -238,20 +255,20 @@ const sendMessage = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const message = await prisma.message.create({
+  const message = await db.messages.create({
     data: {
       content,
-      messageType: messageType || 'TEXT',
-      chatRoom: { connect: { id: chatId } },
-      sender: { connect: { id: userId } },
+      message_type: messageType || 'TEXT',
+      chat_room_id: chatId,
+      sender_id: userId
     },
     include: {
       sender: {
         select: {
           id: true,
           username: true,
-          avatar: true,
-          isVerified: true,
+          avatar_url: true,
+          profile_complete_percentage: true
         }
       }
     }
@@ -264,7 +281,7 @@ const leaveChat = async (req: Request, res: Response): Promise<void> => {
   const { chatId } = req.params;
   const userId = req.user as string;
 
-  const membership = await prisma.chatRoomMember.findFirst({
+  const membership = await db.chatRoomMember.findFirst({
     where: {
       chatRoomId: chatId,
       userId,
@@ -276,19 +293,19 @@ const leaveChat = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  await prisma.chatRoomMember.delete({
+  await db.chat_room_members.delete({
     where: { id: membership.id }
   });
 
   // If it's a direct chat or group chat with only one member left, deactivate it instead of deleting
-  const remainingMembers = await prisma.chatRoomMember.count({
-    where: { chatRoomId: chatId }
+  const remainingMembers = await db.chat_room_members.count({
+    where: { chat_room_id: chatId }
   });
 
   if (remainingMembers === 0) {
-    await prisma.chatRoom.update({
+    await db.chat_rooms.update({
       where: { id: chatId },
-      data: { isActive: false }
+      data: { is_active: false }
     });
   }
 

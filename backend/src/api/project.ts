@@ -1,9 +1,12 @@
-import { PrismaClient, Project as PrismaProject, ProjectStatus, ProjectType, BidStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { prisma, db } from '../utils/prismaClient';
 
-const prisma = new PrismaClient();
+type ProjectStatus = 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+type ProjectType = 'FIXED_PRICE' | 'HOURLY' | 'MILESTONE';
+type BidStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
 
 export class Project {
-  private prisma: PrismaClient;
+  private prisma: any;
 
   constructor() {
     this.prisma = prisma;
@@ -11,52 +14,39 @@ export class Project {
 
   // Find project by ID
   async findById(id: string) {
-    return await this.prisma.project.findUnique({
+    return await db.projects.findUnique({
       where: { id },
       include: {
-        client: {
+        owner: {
           select: {
             id: true,
             username: true,
-            avatar: true,
-            isVerified: true,
+            avatar_url: true,
+            profile_complete_percentage: true,
             bio: true,
-            portfolioUrl: true,
           }
         },
-        assignedTo: {
-          select: {
-            id: true,
-            username: true,
-            avatar: true,
-            isVerified: true,
-            bio: true,
-            portfolioUrl: true,
-          }
-        },
-        category: {
+        categories: {
           select: {
             id: true,
             name: true,
             description: true,
           }
         },
-        bids: {
+        project_members: {
           include: {
-            bidder: {
+            user: {
               select: {
                 id: true,
                 username: true,
-                avatar: true,
-                isVerified: true,
-                skills: true,
+                avatar_url: true,
+                profile_complete_percentage: true,
               }
             }
-          },
-          orderBy: { amount: 'asc' }
+          }
         },
         _count: {
-          select: { bids: true }
+          select: { project_members: true }
         }
       }
     });
@@ -71,6 +61,9 @@ export class Project {
     clientId?: string;
     assignedToId?: string;
     sortBy?: string;
+    minBudget?: number;
+    maxBudget?: number;
+    search?: string;
   } = {}) {
     const {
       page = 1,
@@ -79,10 +72,13 @@ export class Project {
       categoryId,
       clientId,
       assignedToId,
-      sortBy = 'newest'
+      sortBy = 'newest',
+      minBudget,
+      maxBudget,
+      search
     } = options;
 
-    let orderBy: any = { createdAt: 'desc' };
+    let orderBy: any = { created_at: 'desc' };
     switch (sortBy) {
       case 'budget_high':
         orderBy = { budget: 'desc' };
@@ -94,70 +90,77 @@ export class Project {
         orderBy = { deadline: 'asc' };
         break;
       case 'newest':
-        orderBy = { createdAt: 'desc' };
+        orderBy = { created_at: 'desc' };
         break;
     }
 
-    const where: any = {};
+    let where: any = {};
     if (status) where.status = status;
-    if (categoryId) where.categoryId = categoryId;
-    if (clientId) where.clientId = clientId;
-    if (assignedToId) where.assignedToId = assignedToId;
+    if (categoryId) where.category_id = categoryId;
+    if (clientId) where.owner_id = clientId;
+    if (assignedToId) {
+      where.project_members = {
+        some: {
+          user_id: assignedToId
+        }
+      };
+    }
+    if (minBudget || maxBudget) {
+      where.budget = {};
+      if (minBudget) where.budget.gte = minBudget;
+      if (maxBudget) where.budget.lte = maxBudget;
+    }
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ];
+    }
 
-    const totalCount = await this.prisma.project.count({ where });
+    const totalCount = await db.projects.count({ where });
 
-    const projects = await this.prisma.project.findMany({
+    const projects = await db.projects.findMany({
       where,
       orderBy,
       take: limit,
       skip: (page - 1) * limit,
       include: {
-        client: {
+        owner: {
           select: {
             id: true,
             username: true,
-            avatar: true,
-            isVerified: true,
+            avatar_url: true,
+            profile_complete_percentage: true,
           }
         },
-        assignedTo: {
-          select: {
-            id: true,
-            username: true,
-            avatar: true,
-            isVerified: true,
-          }
-        },
-        category: {
+        categories: {
           select: {
             id: true,
             name: true,
-            icon: true,
           }
         },
-        bids: {
+        project_members: {
           include: {
-            bidder: {
+            user: {
               select: {
                 id: true,
                 username: true,
-                avatar: true,
-                isVerified: true,
+                avatar_url: true,
+                profile_complete_percentage: true,
               }
             }
-          },
-          orderBy: { amount: 'asc' }
+          }
         },
         _count: {
-          select: { bids: true }
+          select: { project_members: true }
         }
       }
     });
 
     return {
-      projects: projects.map(project => ({
+      projects: projects.map((project: any) => ({
         ...project,
-        bidsCount: project._count.bids,
+        memberCount: project._count.project_members,
         _count: undefined,
       })),
       totalCount,
@@ -171,193 +174,331 @@ export class Project {
     title: string;
     description: string;
     projectType: ProjectType;
-    technologies: string[];
+    technologies?: string[];
     budget: number;
     deadline?: Date;
-    clientId: string;
-    categoryId: string;
-  }): Promise<PrismaProject> {
-    return await this.prisma.project.create({
+    ownerId: string;
+    categoryId?: string;
+  }) {
+    return await db.projects.create({
       data: {
         title: data.title,
-        description: data.description,
-        projectType: data.projectType,
-        technologies: data.technologies,
+        description: data.description || '',
+        type: data.projectType,
+        technologies: data.technologies || [],
         budget: data.budget,
         deadline: data.deadline,
-        clientId: data.clientId,
-        categoryId: data.categoryId,
+        owner_id: data.ownerId,
+        category_id: data.categoryId,
         status: 'OPEN',
-      }
-    });
-  }
-
-  // Update project
-  async update(id: string, data: Partial<PrismaProject>): Promise<PrismaProject> {
-    return await this.prisma.project.update({
-      where: { id },
-      data: {
-        ...data,
-        updatedAt: new Date(),
-      }
-    });
-  }
-
-  // Delete project
-  async delete(id: string): Promise<PrismaProject> {
-    return await this.prisma.project.delete({
-      where: { id }
-    });
-  }
-
-  // Place bid on project
-  async placeBid(projectId: string, bidderId: string, amount: number, proposal: string) {
-    // Check if user already bid
-    const existingBid = await this.prisma.bid.findFirst({
-      where: {
-        projectId,
-        bidderId,
-      }
-    });
-
-    if (existingBid) {
-      throw new Error('You have already placed a bid on this project');
-    }
-
-    return await this.prisma.bid.create({
-      data: {
-        amount,
-        proposal,
-        project: { connect: { id: projectId } },
-        bidder: { connect: { id: bidderId } },
-        status: 'PENDING',
       },
       include: {
-        bidder: {
+        owner: {
           select: {
             id: true,
             username: true,
-            avatar: true,
-            isVerified: true,
-            skills: true,
+            avatar_url: true,
+          }
+        },
+        categories: {
+          select: {
+            id: true,
+            name: true,
           }
         }
       }
     });
   }
 
-  // Accept bid
-  async acceptBid(projectId: string, bidId: string, clientId: string) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-      include: { client: true }
+  // Update project
+  async update(id: string, data: {
+    title?: string;
+    description?: string;
+    projectType?: ProjectType;
+    technologies?: string[];
+    budget?: number;
+    deadline?: Date;
+    categoryId?: string;
+    status?: ProjectStatus;
+  }) {
+    return await db.projects.update({
+      where: { id },
+      data: {
+        ...(data.title && { title: data.title }),
+        ...(data.description && { description: data.description }),
+        ...(data.projectType && { type: data.projectType }),
+        ...(data.technologies && { technologies: data.technologies }),
+        ...(data.budget && { budget: data.budget }),
+        ...(data.deadline && { deadline: data.deadline }),
+        ...(data.categoryId && { category_id: data.categoryId }),
+        ...(data.status && { status: data.status }),
+        updated_at: new Date(),
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            avatar_url: true,
+          }
+        },
+        categories: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        project_members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar_url: true,
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Delete project
+  async delete(id: string) {
+    return await db.projects.delete({
+      where: { id }
+    });
+  }
+
+  // Add member to project
+  async addMember(projectId: string, userId: string, role: string = 'member') {
+    const existing = await db.project_members.findFirst({
+      where: {
+        project_id: projectId,
+        user_id: userId
+      }
+    });
+
+    if (existing) {
+      throw new Error('User is already a member of this project');
+    }
+
+    return await db.project_members.create({
+      data: {
+        project_id: projectId,
+        user_id: userId,
+        role: role
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar_url: true,
+          }
+        }
+      }
+    });
+  }
+
+  // Remove member from project
+  async removeMember(projectId: string, userId: string) {
+    const member = await db.project_members.findFirst({
+      where: {
+        project_id: projectId,
+        user_id: userId
+      }
+    });
+
+    if (!member) {
+      throw new Error('User is not a member of this project');
+    }
+
+    return await db.project_members.delete({
+      where: { id: member.id }
+    });
+  }
+
+  // Update project status with validation
+  async updateStatus(id: string, status: ProjectStatus, updatedBy: string) {
+    const project = await db.projects.findUnique({
+      where: { id },
+      include: {
+        project_members: true
+      }
     });
 
     if (!project) {
       throw new Error('Project not found');
     }
 
-    if (project.clientId !== clientId) {
-      throw new Error('Access denied');
+    const isMember = project.project_members.some((m: any) => m.user_id === updatedBy);
+    const isOwner = project.owner_id === updatedBy;
+
+    if (!isOwner && !isMember) {
+      throw new Error('Not authorized to update project status');
     }
 
-    const bid = await this.prisma.bid.findUnique({
-      where: { id: bidId },
-      include: { bidder: true }
-    });
-
-    if (!bid || bid.projectId !== projectId) {
-      throw new Error('Bid not found');
+    // Validate status transitions
+    if (project.status === 'COMPLETED' && status !== 'COMPLETED') {
+      throw new Error('Cannot change status of completed project');
     }
 
-    // Update project
-    await this.prisma.project.update({
-      where: { id: projectId },
-      data: {
-        assignedToId: bid.bidderId,
-        status: 'IN_PROGRESS',
-      }
-    });
+    if (project.status === 'CANCELLED' && status !== 'CANCELLED') {
+      throw new Error('Cannot change status of cancelled project');
+    }
 
-    // Update bid status
-    await this.prisma.bid.update({
-      where: { id: bidId },
-      data: { status: 'ACCEPTED' }
-    });
-
-    // Reject other bids
-    await this.prisma.bid.updateMany({
-      where: {
-        projectId,
-        id: { not: bidId }
-      },
-      data: { status: 'REJECTED' }
-    });
-
-    return bid;
-  }
-
-  // Update project status
-  async updateStatus(id: string, status: ProjectStatus, updatedBy: string): Promise<void> {
-    await this.prisma.project.update({
+    return await db.projects.update({
       where: { id },
       data: {
         status,
-        updatedAt: new Date(),
+        updated_at: new Date()
       }
     });
   }
 
-  // Get user's projects (as client or assignee)
-  async getUserProjects(userId: string, options: {
+  // Search projects
+  async search(query: string, options: {
     page?: number;
     limit?: number;
-    role?: 'client' | 'assignee' | 'both';
+    categoryId?: string;
+    status?: ProjectStatus;
   } = {}) {
-    const { page = 1, limit = 20, role = 'both' } = options;
+    const {
+      page = 1,
+      limit = 20,
+      categoryId,
+      status
+    } = options;
 
-    let where: any = {};
-    if (role === 'client') {
-      where.clientId = userId;
-    } else if (role === 'assignee') {
-      where.assignedToId = userId;
-    } else {
-      where.OR = [
-        { clientId: userId },
-        { assignedToId: userId }
-      ];
-    }
+    const where: any = {
+      OR: [
+        { title: { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } }
+      ]
+    };
 
-    return await this.prisma.project.findMany({
+    if (categoryId) where.category_id = categoryId;
+    if (status) where.status = status;
+
+    const totalCount = await db.projects.count({ where });
+
+    const projects = await db.projects.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
       take: limit,
       skip: (page - 1) * limit,
       include: {
-        client: {
+        owner: {
           select: {
             id: true,
             username: true,
-            avatar: true,
-            isVerified: true,
+            avatar_url: true,
           }
         },
-        assignedTo: {
-          select: {
-            id: true,
-            username: true,
-            avatar: true,
-            isVerified: true,
-          }
-        },
-        category: {
+        categories: {
           select: {
             id: true,
             name: true,
           }
         },
+        project_members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar_url: true,
+              }
+            }
+          }
+        },
         _count: {
-          select: { bids: true }
+          select: { project_members: true }
+        }
+      }
+    });
+
+    return {
+      projects: projects.map((project: any) => ({
+        ...project,
+        memberCount: project._count.project_members,
+        _count: undefined
+      })),
+      totalCount,
+      page,
+      limit
+    };
+  }
+
+  // Get user's projects (as owner or member)
+  async getUserProjects(userId: string, options: {
+    page?: number;
+    limit?: number;
+    role?: 'owner' | 'member' | 'both';
+    status?: ProjectStatus;
+  } = {}) {
+    const {
+      page = 1,
+      limit = 20,
+      role = 'both',
+      status
+    } = options;
+
+    let where: any = {};
+    if (role === 'owner') {
+      where.owner_id = userId;
+    } else if (role === 'member') {
+      where.project_members = {
+        some: { user_id: userId }
+      };
+    } else {
+      where.OR = [
+        { owner_id: userId },
+        {
+          project_members: {
+            some: { user_id: userId }
+          }
+        }
+      ];
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    return await db.projects.findMany({
+      where,
+      orderBy: { created_at: 'desc' },
+      take: limit,
+      skip: (page - 1) * limit,
+      include: {
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            avatar_url: true,
+          }
+        },
+        categories: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        project_members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar_url: true,
+              }
+            }
+          }
+        },
+        _count: {
+          select: { project_members: true }
         }
       }
     });

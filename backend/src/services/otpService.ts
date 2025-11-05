@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, db } from '../utils/prismaClient';
 
 interface OTPOptions {
   length?: number;

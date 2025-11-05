@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, db } from '../../utils/prismaClient';
 
 const followUser = async (req: Request, res: Response): Promise<void> => {
   const userId = req.user as string;
@@ -18,8 +16,8 @@ const followUser = async (req: Request, res: Response): Promise<void> => {
   }
 
   const [user, targetUser] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId } }),
-    prisma.user.findUnique({ where: { id: targetUserId } })
+    db.users.findUnique({ where: { id: userId } } as any),
+    db.users.findUnique({ where: { id: targetUserId } } as any)
   ]);
 
   if (!user || !targetUser) {
@@ -27,7 +25,7 @@ const followUser = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const existingFollow = await prisma.follow.findUnique({
+  const existingFollow = await db.follows.findUnique({
     where: {
       followerId_followingId: {
         followerId: userId,
@@ -41,7 +39,7 @@ const followUser = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  await prisma.follow.create({
+  await db.follows.create({
     data: {
       follower: { connect: { id: userId } },
       following: { connect: { id: targetUserId } },
@@ -49,7 +47,7 @@ const followUser = async (req: Request, res: Response): Promise<void> => {
   });
 
   // Create notification
-  await prisma.notification.create({
+  await db.notifications.create({
     data: {
       type: 'FOLLOW',
       title: 'New Follower',
@@ -70,7 +68,7 @@ const unfollowUser = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const follow = await prisma.follow.findUnique({
+  const follow = await db.follows.findUnique({
     where: {
       followerId_followingId: {
         followerId: userId,
@@ -84,7 +82,7 @@ const unfollowUser = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  await prisma.follow.delete({
+  await db.follows.delete({
     where: { id: follow.id }
   });
 
@@ -96,7 +94,7 @@ const getFollowers = async (req: Request, res: Response): Promise<void> => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
 
-  const followers = await prisma.follow.findMany({
+  const followers = await db.follows.findMany({
     where: { followingId: userId },
     take: limit,
     skip: (page - 1) * limit,
@@ -120,10 +118,10 @@ const getFollowers = async (req: Request, res: Response): Promise<void> => {
     }
   });
 
-  const formattedFollowers = followers.map(f => ({
+  const formattedFollowers = followers.map((f: any) => ({
     ...f.follower,
-    followersCount: f.follower._count.followers,
-    followingCount: f.follower._count.following,
+    followersCount: f.follower._count?.followers,
+    followingCount: f.follower._count?.following,
     _count: undefined,
   }));
 
@@ -135,7 +133,7 @@ const getFollowing = async (req: Request, res: Response):Promise<void> => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
 
-  const following = await prisma.follow.findMany({
+  const following = await db.follows.findMany({
     where: { followerId: userId },
     take: limit,
     skip: (page - 1) * limit,
@@ -159,10 +157,10 @@ const getFollowing = async (req: Request, res: Response):Promise<void> => {
     }
   });
 
-  const formattedFollowing = following.map(f => ({
+  const formattedFollowing = following.map((f: any) => ({
     ...f.following,
-    followersCount: f.following._count.followers,
-    followingCount: f.following._count.following,
+    followersCount: f.following._count?.followers,
+    followingCount: f.following._count?.following,
     _count: undefined,
   }));
 
@@ -175,15 +173,15 @@ const getUserFeed = async (req: Request, res: Response):Promise<void> => {
   const limit = Number(req.query.limit) || 20;
 
   // Get users that current user follows
-  const following = await prisma.follow.findMany({
+  const following = await db.follows.findMany({
     where: { followerId: userId },
     select: { followingId: true }
-  });
+  } as any);
 
-  const followingIds = following.map(f => f.followingId);
+  const followingIds = following.map((f: any) => f.followingId);
 
   // Include user's own posts and posts from followed users
-  const feedPosts = await prisma.post.findMany({
+  const feedPosts = await db.posts.findMany({
     where: {
       OR: [
         { authorId: { in: [...followingIds, userId] } },
@@ -220,10 +218,10 @@ const getUserFeed = async (req: Request, res: Response):Promise<void> => {
     }
   });
 
-  const postsWithCounts = feedPosts.map(post => ({
+  const postsWithCounts = feedPosts.map((post: any) => ({
     ...post,
-    commentsCount: post._count.comments,
-    likesCount: post._count.likes,
+    commentsCount: post.__count?.comments,
+    likesCount: post._count?.likes,
     _count: undefined,
   }));
 
@@ -235,7 +233,7 @@ const getNotifications = async (req: Request, res: Response):Promise<void> => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
 
-  const notifications = await prisma.notification.findMany({
+  const notifications = await db.notifications.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
     take: limit,
@@ -243,7 +241,7 @@ const getNotifications = async (req: Request, res: Response):Promise<void> => {
   });
 
   // Mark notifications as read
-  await prisma.notification.updateMany({
+  await db.notifications.updateMany({
     where: {
       userId,
       isRead: false,
@@ -257,7 +255,7 @@ const getNotifications = async (req: Request, res: Response):Promise<void> => {
 const getUnreadNotificationCount = async (req: Request, res: Response):Promise<void> => {
   const userId = req.user as string;
 
-  const count = await prisma.notification.count({
+  const count = await db.notifications.count({
     where: {
       userId,
       isRead: false,
@@ -277,7 +275,7 @@ const searchUsers = async (req: Request, res: Response):Promise<void> => {
     return;
   }
 
-  const users = await prisma.user.findMany({
+  const users = await db.users.findMany({
     where: {
       OR: [
         {
@@ -314,10 +312,10 @@ const searchUsers = async (req: Request, res: Response):Promise<void> => {
     }
   });
 
-  const usersWithCounts = users.map(user => ({
+  const usersWithCounts = users.map((user: any) => ({
     ...user,
-    postsCount: user._count.posts,
-    followersCount: user._count.followers,
+    postsCount: user._count?.posts,
+    followersCount: user._count?.followers,
     _count: undefined,
   }));
 

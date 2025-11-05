@@ -1,33 +1,28 @@
-import { PrismaClient, Post as PrismaPost, PostType } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { PrismaClient, Prisma } from '@prisma/client';
+import { db } from '../utils/prismaClient';
+import { PostType } from '../types/posts';
 
 export class Post {
-  private prisma: PrismaClient;
+  private prisma: any;
 
-  constructor() {
-    this.prisma = prisma;
-  }
+  constructor() {}
 
   // Find post by ID
   async findById(id: string) {
-    return await this.prisma.post.findUnique({
+    return await db.posts.findUnique({
       where: { id },
       include: {
         author: {
           select: {
             id: true,
             username: true,
-            avatar: true,
-            isVerified: true,
-            verificationBadge: true,
+            avatar_url: true,
+            profile_complete_percentage: true,
           }
         },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            icon: true,
+        categories: {
+          include: {
+            categories: true
           }
         },
         comments: {
@@ -36,18 +31,16 @@ export class Post {
               select: {
                 id: true,
                 username: true,
-                avatar: true,
-                isVerified: true,
+                avatar_url: true,
               }
             },
-            replies: {
+            comment_replies: {
               include: {
                 author: {
                   select: {
                     id: true,
                     username: true,
-                    avatar: true,
-                    isVerified: true,
+                    avatar_url: true,
                   }
                 },
                 _count: {
@@ -56,10 +49,15 @@ export class Post {
               }
             },
             _count: {
-              select: { likes: true, replies: true }
+              select: { likes: true, comment_replies: true }
             }
           },
-          orderBy: { createdAt: 'asc' }
+          orderBy: { created_at: 'asc' }
+        },
+        post_media: {
+          include: {
+            media: true
+          }
         },
         _count: {
           select: {
@@ -78,7 +76,6 @@ export class Post {
     sortBy?: string;
     categoryId?: string;
     authorId?: string;
-    isVerified?: boolean;
   } = {}) {
     const {
       page = 1,
@@ -86,33 +83,42 @@ export class Post {
       sortBy = 'new',
       categoryId,
       authorId,
-      isVerified = true
     } = options;
 
-    let orderBy: any = { createdAt: 'desc' };
+    let orderBy: any = { created_at: 'desc' };
 
     switch (sortBy) {
       case 'new':
-        orderBy = { createdAt: 'desc' };
+        orderBy = { created_at: 'desc' };
         break;
       case 'old':
-        orderBy = { createdAt: 'asc' };
+        orderBy = { created_at: 'asc' };
         break;
       case 'top':
-        orderBy = { likesCount: 'desc' };
+        orderBy = [
+          { likes_count: 'desc' },
+          { created_at: 'desc' }
+        ];
         break;
       case 'trending':
-        orderBy = { commentsCount: 'desc' };
+        orderBy = [
+          { comments_count: 'desc' },
+          { created_at: 'desc' }
+        ];
         break;
     }
 
-    const where: any = { isVerified };
-    if (categoryId) where.categoryId = categoryId;
-    if (authorId) where.authorId = authorId;
+    const where: any = {};
+    if (categoryId) {
+      where.categories = {
+        some: { category_id: categoryId }
+      };
+    }
+    if (authorId) where.author_id = authorId;
 
-    const totalCount = await this.prisma.post.count({ where });
+    const totalCount = await db.posts.count({ where });
 
-    const posts = await this.prisma.post.findMany({
+    const posts = await db.posts.findMany({
       where,
       orderBy,
       take: limit,
@@ -122,16 +128,18 @@ export class Post {
           select: {
             id: true,
             username: true,
-            avatar: true,
-            isVerified: true,
-            verificationBadge: true,
+            avatar_url: true,
+            profile_complete_percentage: true
           }
         },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            icon: true,
+        categories: {
+          include: {
+            categories: true
+          }
+        },
+        post_media: {
+          include: {
+            media: true
           }
         },
         _count: {
@@ -144,7 +152,7 @@ export class Post {
     });
 
     return {
-      posts: posts.map(post => ({
+      posts: posts.map((post: any) => ({
         ...post,
         commentsCount: post._count.comments,
         likesCount: post._count.likes,
@@ -160,74 +168,162 @@ export class Post {
   async create(data: {
     title: string;
     content?: string;
-    postType: PostType;
+    post_type: PostType;
     tags?: string[];
-    authorId: string;
-    categoryId?: string;
-    imageLink?: string;
-    imageId?: string;
-  }): Promise<PrismaPost> {
-    return await this.prisma.post.create({
+    author_id: string;
+    category_ids?: string[];
+    media_ids?: string[];
+  }) {
+    return await db.posts.create({
       data: {
         title: data.title,
         content: data.content,
-        postType: data.postType,
+        post_type: data.post_type,
         tags: data.tags || [],
-        authorId: data.authorId,
-        categoryId: data.categoryId,
-        // imageLink: data.imageLink,
-        // imageId: data.imageId,
-        isVerified: false, // Will be verified by admin or auto-verified for trusted users
+        author_id: data.author_id,
+        categories: data.category_ids ? {
+          createMany: {
+            data: data.category_ids.map(id => ({ category_id: id }))
+          }
+        } : undefined,
+        post_media: data.media_ids ? {
+          createMany: {
+            data: data.media_ids.map(id => ({ media_id: id }))
+          }
+        } : undefined,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            avatar_url: true
+          }
+        },
+        categories: {
+          include: {
+            categories: true
+          }
+        },
+        post_media: {
+          include: {
+            media: true
+          }
+        }
       }
     });
   }
 
   // Update post
-  async update(id: string, data: Partial<PrismaPost>): Promise<PrismaPost> {
-    return await this.prisma.post.update({
+  async update(id: string, data: {
+    title?: string;
+    content?: string;
+    post_type?: PostType;
+    tags?: string[];
+    category_ids?: string[];
+    media_ids?: string[];
+  }) {
+    const updateData: any = {
+      ...data,
+      updated_at: new Date(),
+    };
+
+    if (data.category_ids) {
+      // First remove existing categories
+      await db.post_categories.deleteMany({
+        where: { post_id: id }
+      });
+
+      // Then add new ones
+      updateData.categories = {
+        createMany: {
+          data: data.category_ids.map(id => ({ category_id: id }))
+        }
+      };
+    }
+
+    if (data.media_ids) {
+      // First remove existing media
+      await db.post_media.deleteMany({
+        where: { post_id: id }
+      });
+
+      // Then add new ones
+      updateData.post_media = {
+        createMany: {
+          data: data.media_ids.map(id => ({ media_id: id }))
+        }
+      };
+    }
+
+    return await db.posts.update({
       where: { id },
-      data: {
-        ...data,
-        updatedAt: new Date(),
+      data: updateData,
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            avatar_url: true
+          }
+        },
+        categories: {
+          include: {
+            categories: true
+          }
+        },
+        post_media: {
+          include: {
+            media: true
+          }
+        }
       }
     });
   }
 
   // Delete post
-  async delete(id: string): Promise<PrismaPost> {
-    return await this.prisma.post.delete({
+  async delete(id: string) {
+    // First remove post's relations
+    await Promise.all([
+      db.post_categories.deleteMany({ where: { post_id: id } }),
+      db.post_media.deleteMany({ where: { post_id: id } }),
+      db.likes.deleteMany({ where: { post_id: id } }),
+      db.comments.deleteMany({ where: { post_id: id } })
+    ]);
+
+    return await db.posts.delete({
       where: { id }
     });
   }
 
   // Like/unlike post
   async toggleLike(postId: string, userId: string): Promise<{ liked: boolean }> {
-    const existingLike = await this.prisma.like.findFirst({
+    const existingLike = await db.likes.findFirst({
       where: {
-        userId,
-        postId,
+        user_id: userId,
+        post_id: postId,
       }
     });
 
     if (existingLike) {
       // Unlike
-      await this.prisma.like.delete({ where: { id: existingLike.id } });
-      await this.prisma.post.update({
+      await db.likes.delete({ where: { id: existingLike.id } });
+      await db.posts.update({
         where: { id: postId },
-        data: { likesCount: { decrement: 1 } }
+        data: { likes_count: { decrement: 1 } }
       });
       return { liked: false };
     } else {
       // Like
-      await this.prisma.like.create({
+      await db.likes.create({
         data: {
-          user: { connect: { id: userId } },
-          post: { connect: { id: postId } },
+          user_id: userId,
+          post_id: postId
         }
       });
-      await this.prisma.post.update({
+      await db.posts.update({
         where: { id: postId },
-        data: { likesCount: { increment: 1 } }
+        data: { likes_count: { increment: 1 } }
       });
       return { liked: true };
     }
@@ -235,21 +331,9 @@ export class Post {
 
   // Increment view count
   async incrementViews(id: string): Promise<void> {
-    await this.prisma.post.update({
+    await db.posts.update({
       where: { id },
-      data: { viewsCount: { increment: 1 } }
-    });
-  }
-
-  // Verify post
-  async verifyPost(id: string, verifiedBy: string): Promise<void> {
-    await this.prisma.post.update({
-      where: { id },
-      data: {
-        isVerified: true,
-        verifiedBy,
-        verifiedAt: new Date(),
-      }
+      data: { views_count: { increment: 1 } }
     });
   }
 
@@ -274,46 +358,59 @@ export class Post {
             contains: query,
             mode: 'insensitive'
           }
+        },
+        {
+          tags: {
+            has: query
+          }
         }
-      ],
-      isVerified: true,
+      ]
     };
 
-    if (categoryId) where.categoryId = categoryId;
+    if (categoryId) {
+      where.categories = {
+        some: { category_id: categoryId }
+      };
+    }
 
-    const totalCount = await this.prisma.post.count({ where });
-
-    const posts = await this.prisma.post.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: (page - 1) * limit,
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            avatar: true,
-            isVerified: true,
-          }
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-        _count: {
-          select: {
-            comments: true,
-            likes: true,
+    const [posts, totalCount] = await Promise.all([
+      db.posts.findMany({
+        where,
+        orderBy: { created_at: 'desc' },
+        take: limit,
+        skip: (page - 1) * limit,
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              avatar_url: true,
+              profile_complete_percentage: true
+            }
+          },
+          categories: {
+            include: {
+              categories: true
+            }
+          },
+          post_media: {
+            include: {
+              media: true
+            }
+          },
+          _count: {
+            select: {
+              comments: true,
+              likes: true,
+            }
           }
         }
-      }
-    });
+      }),
+      db.posts.count({ where })
+    ]);
 
     return {
-      posts: posts.map(post => ({
+      posts: posts.map((post: any) => ({
         ...post,
         commentsCount: post._count.comments,
         likesCount: post._count.likes,

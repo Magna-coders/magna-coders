@@ -37,7 +37,10 @@ export const authenticateToken = async (
     }
 
     // Verify token
-    const decoded = jwt.verify(token, SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, SECRET);
+    if (typeof decoded === 'string' || !decoded.id) {
+      throw new Error('Invalid token payload');
+    }
 
     // Check if user exists
     const user = await db.users.findUnique({
@@ -58,20 +61,22 @@ export const authenticateToken = async (
 
     next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      res.status(401).json({
-        success: false,
-        message: 'Invalid token'
-      });
-      return;
-    }
+    if (error instanceof Error) {
+      if (error.name === 'JsonWebTokenError') {
+        res.status(401).json({
+          success: false,
+          message: 'Invalid token'
+        });
+        return;
+      }
 
-    if (error instanceof jwt.TokenExpiredError) {
-      res.status(401).json({
-        success: false,
-        message: 'Token expired'
-      });
-      return;
+      if (error.name === 'TokenExpiredError') {
+        res.status(401).json({
+          success: false,
+          message: 'Token expired'
+        });
+        return;
+      }
     }
 
     console.error('Auth middleware error:', error);

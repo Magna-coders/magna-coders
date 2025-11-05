@@ -374,14 +374,14 @@ class AuthService {
     return jwt.sign(
       { id: userId },
       SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '7d' } as jwt.SignOptions
     );
   }
 
   // Verify JWT token
-  verifyToken(token: string) {
+  verifyToken(token: string): jwt.JwtPayload {
     try {
-      return jwt.verify(token, SECRET) as { id: string };
+      return jwt.verify(token, SECRET);
     } catch (error) {
       throw new Error('Invalid token');
     }

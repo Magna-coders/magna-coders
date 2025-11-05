@@ -1,8 +1,17 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { SECRET } from '../../utils/config';
 import { prisma, db } from '../../utils/prismaClient';
+
+interface TokenPayload {
+  id: string;
+}
+
+const jwtSign = (payload: TokenPayload, expiresIn: string): string => {
+  const options: SignOptions = { expiresIn };
+  return jwt.sign(payload, SECRET, options);
+};
 
 const loginUser = async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body;
@@ -30,17 +39,23 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const accessToken = jwt.sign({ id: user.id }, SECRET as any, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '30m' } as any);
+  const accessToken = jwtSign(
+    { id: user.id },
+    process.env.ACCESS_TOKEN_EXPIRES_IN || '30m'
+  );
 
   // Create refresh token and persist
-  const refreshToken = jwt.sign({ id: user.id }, SECRET as any, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '1d' } as any);
+  const refreshToken = jwtSign(
+    { id: user.id },
+    process.env.REFRESH_TOKEN_EXPIRES_IN || '1d'
+  );
   const expiresAt = new Date(Date.now() + (parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || '30') * 24 * 60 * 60 * 1000));
 
-  await (prisma as any).refreshToken.create({
+  await db.refresh_tokens.create({
     data: {
-      userId: user.id,
+      user_id: user.id,
       token: refreshToken,
-      expiresAt,
+      expires_at: expiresAt,
     }
   });
 

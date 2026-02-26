@@ -1,0 +1,895 @@
+generator client {
+  provider = "prisma-client-js"
+  url      = env("DATABASE_URL")
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model activity_logs {
+  id          String    @id @db.Uuid
+  contract_id String    @db.Uuid
+  actor_id    String?   @db.Uuid
+  action_type String    @db.VarChar
+  payload     Json?
+  created_at  DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  contracts   contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+
+  @@index([action_type])
+  @@index([contract_id])
+}
+
+model admin_actions {
+  id          String   @id @db.Uuid
+  admin_id    String   @db.Uuid
+  action_type String   @db.VarChar
+  target_id   String?  @db.Uuid
+  target_type String?  @db.VarChar
+  details     Json?
+  created_at  DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  users       users    @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@index([action_type])
+  @@index([admin_id])
+}
+
+model ai_interactions {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String   @db.Uuid
+  session_id       String   @db.VarChar(255)
+  query_summary    String?
+  tools_used       Json?
+  response_summary String?
+  ip_address       String?  @db.Inet
+  user_agent       String?
+  created_at       DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  users            users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([created_at])
+  @@index([session_id])
+  @@index([user_id])
+}
+
+model applications {
+  id             String        @id @db.Uuid
+  opportunity_id String        @db.Uuid
+  user_id        String        @db.Uuid
+  resume_url     String?
+  cover_letter   String?
+  status         String        @default("submitted")
+  submitted_at   DateTime?     @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  metadata       Json?
+  opportunities  opportunities @relation(fields: [opportunity_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users          users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model bookmarks {
+  id             String        @id @db.Uuid
+  user_id        String        @db.Uuid
+  opportunity_id String        @db.Uuid
+  saved_at       DateTime?     @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  opportunities  opportunities @relation(fields: [opportunity_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users          users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model categories {
+  id                 String               @id @db.Uuid
+  name               String               @unique @db.VarChar
+  description        String?
+  opportunities      opportunities[]
+  posts              posts[]
+  project_categories project_categories[]
+  projects           projects[]
+  user_categories    user_categories[]
+}
+
+model change_requests {
+  id          String    @id @db.Uuid
+  contract_id String    @db.Uuid
+  proposed_by String    @db.Uuid
+  type        String    @db.VarChar
+  changes     Json
+  status      String    @default("PENDING") @db.VarChar
+  created_at  DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at  DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  contracts   contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+  users       users     @relation(fields: [proposed_by], references: [id], onDelete: Cascade)
+
+  @@index([contract_id])
+  @@index([status])
+}
+
+model coin_orders {
+  id             String        @id @db.Uuid
+  user_id        String        @db.Uuid
+  package_id     String        @db.Uuid
+  amount_kes     Decimal       @db.Decimal(10, 2)
+  coins_credited Int           @default(0)
+  status         String        @default("PENDING") @db.VarChar
+  payment_method String?       @db.VarChar
+  payment_ref    String?       @db.VarChar
+  created_at     DateTime      @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at     DateTime      @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  coin_packages  coin_packages @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  users          users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([user_id])
+}
+
+model coin_packages {
+  id          String        @id @db.Uuid
+  base_coins  Int
+  bonus_coins Int           @default(0)
+  total_coins Int
+  price_kes   Decimal       @db.Decimal(10, 2)
+  is_active   Boolean       @default(true)
+  created_at  DateTime      @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at  DateTime      @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  coin_orders coin_orders[]
+}
+
+model coin_transactions {
+  id              String       @id @db.Uuid
+  user_id         String       @db.Uuid
+  type            String       @db.VarChar
+  amount          Decimal      @db.Decimal(10, 2)
+  direction       String       @db.VarChar
+  status          String       @default("PENDING") @db.VarChar
+  reference_id    String?      @db.VarChar
+  idempotency_key String?      @unique @db.VarChar
+  description     String?
+  created_at      DateTime     @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  coin_wallets    coin_wallets @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([type])
+  @@index([user_id])
+}
+
+model coin_wallets {
+  id                String              @id @db.Uuid
+  user_id           String              @unique @db.Uuid
+  balance           Decimal             @default(0.00) @db.Decimal(10, 2)
+  max_capacity      Decimal             @default(10000.00) @db.Decimal(10, 2)
+  status            String              @default("ACTIVE") @db.VarChar
+  created_at        DateTime            @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at        DateTime            @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  coin_transactions coin_transactions[]
+  users             users               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model comments {
+  id             String     @id @db.Uuid
+  content        String
+  author_id      String     @db.Uuid
+  post_id        String     @db.Uuid
+  parent_id      String?    @db.Uuid
+  created_at     DateTime?  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at     DateTime?  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  users          users      @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  comments       comments?  @relation("commentsTocomments", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_comments comments[] @relation("commentsTocomments")
+  posts          posts      @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  likes          likes[]
+}
+
+model companies {
+  id            String          @id @db.Uuid
+  name          String          @db.VarChar
+  slug          String?         @unique @db.VarChar
+  logo_url      String?
+  website_url   String?
+  description   String?
+  verified      Boolean         @default(false)
+  location      String?
+  created_at    DateTime?       @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at    DateTime?       @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  opportunities opportunities[]
+}
+
+model contracts {
+  id                                  String                 @id @db.Uuid
+  client_id                           String                 @db.Uuid
+  developer_id                        String?                @db.Uuid
+  title                               String                 @db.VarChar
+  description                         String?
+  currency                            String                 @default("KES") @db.VarChar
+  total_amount                        Decimal                @db.Decimal(12, 2)
+  status                              String                 @default("DRAFT") @db.VarChar
+  funding_mode                        String                 @default("NEXT_MILESTONE_REQUIRED") @db.VarChar
+  start_at                            DateTime?              @db.Timestamptz(6)
+  created_at                          DateTime               @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at                          DateTime               @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  terms_version                       String?                @db.VarChar
+  metadata                            Json?
+  activity_logs                       activity_logs[]
+  change_requests                     change_requests[]
+  users_contracts_client_idTousers    users                  @relation("contracts_client_idTousers", fields: [client_id], references: [id], onDelete: Cascade)
+  users_contracts_developer_idTousers users?                 @relation("contracts_developer_idTousers", fields: [developer_id], references: [id])
+  disputes                            disputes[]
+  escrow_accounts                     escrow_accounts?
+  escrow_transactions                 escrow_transactions[]
+  milestones                          milestones[]
+  platform_fees                       platform_fees[]
+  progress_submissions                progress_submissions[]
+
+  @@index([client_id])
+  @@index([developer_id])
+  @@index([status])
+}
+
+model conversation_members {
+  id              String        @id @db.Uuid
+  conversation_id String        @db.Uuid
+  user_id         String        @db.Uuid
+  joined_at       DateTime?     @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users           users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model conversations {
+  id                   String                 @id @db.Uuid
+  name                 String?                @db.VarChar
+  is_group             Boolean                @default(false)
+  created_at           DateTime?              @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at           DateTime?              @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  conversation_members conversation_members[]
+  messages             messages[]
+}
+
+model disputes {
+  id           String      @id @db.Uuid
+  contract_id  String      @db.Uuid
+  milestone_id String?     @db.Uuid
+  opened_by    String      @db.Uuid
+  reason       String?
+  status       String      @default("OPEN") @db.VarChar
+  resolution   String?     @db.VarChar
+  admin_id     String?     @db.Uuid
+  created_at   DateTime    @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at   DateTime    @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  contracts    contracts   @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+  milestones   milestones? @relation(fields: [milestone_id], references: [id])
+  users        users       @relation(fields: [opened_by], references: [id], onDelete: Cascade)
+
+  @@index([contract_id])
+  @@index([status])
+}
+
+model escrow_accounts {
+  contract_id    String    @id @db.Uuid
+  funded_total   Decimal   @default(0.00) @db.Decimal(12, 2)
+  released_total Decimal   @default(0.00) @db.Decimal(12, 2)
+  refunded_total Decimal   @default(0.00) @db.Decimal(12, 2)
+  status         String    @default("EMPTY") @db.VarChar
+  created_at     DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at     DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  contracts      contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+}
+
+model escrow_transactions {
+  id                 String    @id @db.Uuid
+  contract_id        String    @db.Uuid
+  type               String    @db.VarChar
+  amount             Decimal   @db.Decimal(12, 2)
+  from_id            String?   @db.Uuid
+  to_id              String?   @db.Uuid
+  provider_reference String?   @db.VarChar
+  status             String    @default("PENDING") @db.VarChar
+  idempotency_key    String?   @unique @db.VarChar
+  created_at         DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  contracts          contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+
+  @@index([contract_id])
+  @@index([status])
+  @@index([type])
+}
+
+model events {
+  id          String    @id @db.Uuid
+  title       String    @db.VarChar
+  description String?
+  created_by  String    @db.Uuid
+  event_date  DateTime  @db.Timestamptz(6)
+  created_at  DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at  DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  users       users     @relation(fields: [created_by], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model files {
+  id                  String                @id @db.Uuid
+  url                 String
+  filename            String
+  mime_type           String
+  size                Int?
+  uploaded_by         String                @db.Uuid
+  uploaded_at         DateTime?             @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  purpose             String?
+  users               users                 @relation(fields: [uploaded_by], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project_attachments project_attachments[]
+}
+
+model friend_requests {
+  id                                       String    @id @db.Uuid
+  sender_id                                String    @db.Uuid
+  receiver_id                              String    @db.Uuid
+  status                                   String    @default("pending") @db.VarChar
+  created_at                               DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  users_friend_requests_receiver_idTousers users     @relation("friend_requests_receiver_idTousers", fields: [receiver_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_friend_requests_sender_idTousers   users     @relation("friend_requests_sender_idTousers", fields: [sender_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model friends {
+  id                             String    @id @db.Uuid
+  user_id                        String    @db.Uuid
+  friend_id                      String    @db.Uuid
+  status                         String    @default("pending") @db.VarChar
+  created_at                     DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  users_friends_friend_idTousers users     @relation("friends_friend_idTousers", fields: [friend_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_friends_user_idTousers   users     @relation("friends_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model likes {
+  id         String    @id @db.Uuid
+  user_id    String    @db.Uuid
+  post_id    String?   @db.Uuid
+  comment_id String?   @db.Uuid
+  comments   comments? @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  posts      posts?    @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model media {
+  id         String       @id @db.Uuid
+  url        String       @db.VarChar
+  type       String       @db.VarChar
+  created_at DateTime?    @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  post_media post_media[]
+}
+
+model messages {
+  id              String        @id @db.Uuid
+  content         String
+  sender_id       String        @db.Uuid
+  conversation_id String        @db.Uuid
+  created_at      DateTime?     @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users           users         @relation(fields: [sender_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model milestone_reviews {
+  id           String     @id @db.Uuid
+  milestone_id String     @db.Uuid
+  reviewer_id  String     @db.Uuid
+  decision     String     @db.VarChar
+  reason_code  String?    @db.VarChar
+  comments     String?
+  created_at   DateTime   @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  milestones   milestones @relation(fields: [milestone_id], references: [id], onDelete: Cascade)
+  users        users      @relation(fields: [reviewer_id], references: [id], onDelete: Cascade)
+
+  @@index([milestone_id])
+}
+
+model milestones {
+  id                   String                 @id @db.Uuid
+  contract_id          String                 @db.Uuid
+  title                String                 @db.VarChar
+  description          String?
+  acceptance_criteria  Json?
+  amount               Decimal                @db.Decimal(12, 2)
+  due_at               DateTime?              @db.Timestamptz(6)
+  order_index          Int                    @default(0)
+  status               String                 @default("NOT_STARTED") @db.VarChar
+  created_at           DateTime               @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at           DateTime               @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  disputes             disputes[]
+  milestone_reviews    milestone_reviews[]
+  contracts            contracts              @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+  progress_submissions progress_submissions[]
+
+  @@index([contract_id])
+  @@index([status])
+}
+
+model notifications {
+  id         String    @id @db.Uuid
+  user_id    String    @db.Uuid
+  title      String    @db.VarChar
+  message    String
+  is_read    Boolean   @default(false)
+  created_at DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model opportunities {
+  id           String         @id @db.Uuid
+  title        String         @db.VarChar
+  description  String?
+  company      String?        @db.VarChar
+  company_id   String?        @db.Uuid
+  location     String?        @db.VarChar
+  salary       String?        @db.VarChar
+  job_type     String?        @db.VarChar
+  deadline     DateTime?      @db.Timestamptz(6)
+  author_id    String         @db.Uuid
+  category_id  String?        @db.Uuid
+  created_at   DateTime?      @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at   DateTime?      @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  applications applications[]
+  bookmarks    bookmarks[]
+  users        users          @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  categories   categories?    @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  companies    companies?     @relation(fields: [company_id], references: [id], onUpdate: NoAction)
+
+  @@index([job_type])
+  @@index([location])
+}
+
+model platform_fees {
+  id          String    @id @db.Uuid
+  contract_id String    @db.Uuid
+  amount      Decimal   @db.Decimal(10, 2)
+  percentage  Decimal   @db.Decimal(5, 2)
+  created_at  DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  contracts   contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+}
+
+model post_media {
+  id       String @id @db.Uuid
+  post_id  String @db.Uuid
+  media_id String @db.Uuid
+  media    media  @relation(fields: [media_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  posts    posts  @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model post_tags {
+  id      String @id @db.Uuid
+  post_id String @db.Uuid
+  tag_id  String @db.Uuid
+  posts   posts  @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tags    tags   @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([post_id])
+  @@index([tag_id])
+}
+
+model posts {
+  id          String       @id @db.Uuid
+  title       String       @db.VarChar
+  content     String?
+  post_type   String       @default("regular") @db.VarChar
+  author_id   String       @db.Uuid
+  category_id String?      @db.Uuid
+  created_at  DateTime?    @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at  DateTime?    @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  comments    comments[]
+  likes       likes[]
+  post_media  post_media[]
+  post_tags   post_tags[]
+  users       users        @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  categories  categories?  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)])
+}
+
+model progress_submissions {
+  id             String     @id @db.Uuid
+  contract_id    String     @db.Uuid
+  milestone_id   String     @db.Uuid
+  submitted_by   String     @db.Uuid
+  summary        String?
+  evidence_items Json?
+  created_at     DateTime   @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at     DateTime   @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  contracts      contracts  @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+  milestones     milestones @relation(fields: [milestone_id], references: [id], onDelete: Cascade)
+  users          users      @relation(fields: [submitted_by], references: [id], onDelete: Cascade)
+
+  @@index([contract_id])
+  @@index([milestone_id])
+}
+
+model project_analytics {
+  id         String    @id @db.Uuid
+  user_id    String?   @db.Uuid
+  project_id String    @db.Uuid
+  type       String    @db.VarChar
+  metadata   Json?
+  created_at DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  projects   projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+}
+
+model project_applications {
+  id               String    @id @db.Uuid
+  project_id       String    @db.Uuid
+  user_id          String    @db.Uuid
+  cover_message    String?
+  status           String    @default("applied") @db.VarChar
+  submitted_at     DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  reviewed_at      DateTime?
+  review_notes     String?
+  applicant_skills String[]  @db.VarChar
+  experience_level String?
+  projects         projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model project_attachments {
+  id         String   @id @db.Uuid
+  project_id String   @db.Uuid
+  file_id    String   @db.Uuid
+  files      files    @relation(fields: [file_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  projects   projects @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model project_bookmarks {
+  id         String    @id @db.Uuid
+  user_id    String    @db.Uuid
+  project_id String    @db.Uuid
+  saved_at   DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  projects   projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model project_categories {
+  id          String     @id @db.Uuid
+  project_id  String     @db.Uuid
+  category_id String     @db.Uuid
+  categories  categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  projects    projects   @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model project_comments {
+  id                     String             @id @db.Uuid
+  project_id             String             @db.Uuid
+  user_id                String             @db.Uuid
+  parent_id              String?            @db.Uuid
+  body                   String?
+  attachments            String[]           @db.VarChar
+  likes_count            Int?               @default(0)
+  created_at             DateTime?          @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  edited_at              DateTime?
+  moderation_flags       String[]           @db.VarChar
+  project_comments       project_comments?  @relation("project_commentsToproject_comments", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_project_comments project_comments[] @relation("project_commentsToproject_comments")
+  projects               projects           @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                  users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model project_contributors {
+  id                  String    @id @db.Uuid
+  project_id          String    @db.Uuid
+  user_id             String    @db.Uuid
+  role                String?   @db.VarChar
+  status              String    @default("invited") @db.VarChar
+  joined_at           DateTime?
+  start_date          DateTime?
+  end_date            DateTime?
+  contributions_count Int?      @default(0)
+  last_activity       DateTime?
+  projects            projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users               users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model project_events {
+  id         String    @id @db.Uuid
+  user_id    String?   @db.Uuid
+  project_id String    @db.Uuid
+  type       String    @db.VarChar
+  metadata   Json?
+  created_at DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  projects   projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+}
+
+model project_members {
+  id         String   @id @db.Uuid
+  project_id String   @db.Uuid
+  user_id    String   @db.Uuid
+  role       String?  @db.VarChar
+  joined_at  DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  projects   projects @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model project_skills {
+  id         String   @id @db.Uuid
+  project_id String   @db.Uuid
+  skill      String   @db.VarChar
+  projects   projects @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model project_tags {
+  id         String   @id @db.Uuid
+  project_id String   @db.Uuid
+  tag        String   @db.VarChar
+  projects   projects @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model project_tasks {
+  id          String    @id @db.Uuid
+  project_id  String    @db.Uuid
+  title       String    @db.VarChar
+  description String?
+  status      String    @default("to-do") @db.VarChar
+  assigned_to String?
+  due_date    DateTime?
+  priority    String?   @db.VarChar
+  created_at  DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at  DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  projects    projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model projects {
+  id                       String                 @id @db.Uuid
+  slug                     String?                @unique @db.VarChar
+  title                    String                 @db.VarChar
+  description              String?
+  short_description        String?                @db.VarChar
+  owner_id                 String                 @db.Uuid
+  team_id                  String?                @db.Uuid
+  category_id              String?                @db.Uuid
+  status                   String                 @default("draft") @db.VarChar
+  visibility               String                 @default("public") @db.VarChar
+  type                     String?                @db.VarChar
+  tech_stack               String[]               @db.VarChar
+  skills_needed            String[]               @db.VarChar
+  tags                     String[]               @db.VarChar
+  looking_for_contributors Boolean                @default(false)
+  contributor_count        Int?                   @default(0)
+  max_contributors         Int?
+  start_date               DateTime?
+  end_date                 DateTime?
+  deadline_for_joining     DateTime?
+  repository_url           String?
+  live_demo_url            String?
+  documentation_url        String?
+  featured_image_url       String?
+  location                 String?
+  city                     String?
+  region                   String?
+  country                  String?
+  lat                      Float?
+  lng                      Float?
+  remote                   Boolean?               @default(false)
+  compensation_type        String?                @db.VarChar
+  compensation_details     String?
+  difficulty_level         String?                @db.VarChar
+  project_size             String?                @db.VarChar
+  team_size                Int?
+  open_positions           Int?
+  views_count              Int?                   @default(0)
+  applications_count       Int?                   @default(0)
+  contributors_count       Int?                   @default(0)
+  comments_count           Int?                   @default(0)
+  is_bookmarked            Boolean?               @default(false)
+  is_applied               Boolean?               @default(false)
+  created_at               DateTime?              @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at               DateTime?              @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  published_at             DateTime?
+  meta_title               String?
+  meta_description         String?
+  og_image                 String?
+  deadline                 DateTime?              @db.Timestamptz(6)
+  members_needed           Int?                   @default(0)
+  project_analytics        project_analytics[]
+  project_applications     project_applications[]
+  project_attachments      project_attachments[]
+  project_bookmarks        project_bookmarks[]
+  project_categories       project_categories[]
+  project_comments         project_comments[]
+  project_contributors     project_contributors[]
+  project_events           project_events[]
+  project_members          project_members[]
+  project_skills           project_skills[]
+  project_tags             project_tags[]
+  project_tasks            project_tasks[]
+  categories               categories?            @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  users                    users                  @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model reels {
+  id         String    @id @db.Uuid
+  title      String    @db.VarChar
+  video_url  String    @db.VarChar
+  author_id  String    @db.Uuid
+  created_at DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  users      users     @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model roles {
+  id          String       @id @db.Uuid
+  name        String       @unique @db.VarChar
+  description String?
+  user_roles  user_roles[]
+}
+
+model skills {
+  id          String        @id @db.Uuid
+  name        String        @unique @db.VarChar
+  description String?
+  user_skills user_skills[]
+}
+
+model store_entitlements {
+  id          String      @id @db.Uuid
+  user_id     String      @db.Uuid
+  item_id     String      @db.Uuid
+  starts_at   DateTime    @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  ends_at     DateTime?   @db.Timestamptz(6)
+  status      String      @default("ACTIVE") @db.VarChar
+  created_at  DateTime    @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  store_items store_items @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  users       users       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([user_id])
+}
+
+model store_items {
+  id                 String               @id @db.Uuid
+  name               String               @db.VarChar
+  description        String?
+  price_coins        Int
+  type               String               @db.VarChar
+  duration_days      Int?
+  is_active          Boolean              @default(true)
+  created_at         DateTime             @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at         DateTime             @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  store_entitlements store_entitlements[]
+}
+
+model tags {
+  id        String      @id @db.Uuid
+  name      String      @unique @db.VarChar
+  post_tags post_tags[]
+}
+
+model user_ai_preferences {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id              String   @unique @db.Uuid
+  ai_personality       String   @default("professional") @db.VarChar(50)
+  response_length      String   @default("medium") @db.VarChar(50)
+  enable_suggestions   Boolean  @default(true)
+  enable_learning_tips Boolean  @default(true)
+  created_at           DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at           DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  users                users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model user_categories {
+  id          String     @id @db.Uuid
+  user_id     String     @db.Uuid
+  category_id String     @db.Uuid
+  categories  categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       users      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model user_roles {
+  id      String @id @db.Uuid
+  user_id String @db.Uuid
+  role_id String @db.Uuid
+  roles   roles  @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users   users  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id])
+}
+
+model user_skills {
+  id       String @id @db.Uuid
+  user_id  String @db.Uuid
+  skill_id String @db.Uuid
+  skills   skills @relation(fields: [skill_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users    users  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id])
+  @@index([skill_id])
+}
+
+model users {
+  id                                                 String                 @id @db.Uuid
+  username                                           String                 @unique @db.VarChar
+  email                                              String                 @unique @db.VarChar
+  password_hash                                      String?                @db.VarChar
+  created_at                                         DateTime?              @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at                                         DateTime?              @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  availability                                       String?                @default("available") @db.VarChar
+  profile_complete_percentage                        Int?                   @default(0)
+  avatar_url                                         String?
+  location                                           String?
+  bio                                                String?
+  website_url                                        String?
+  github_url                                         String?
+  linkedin_url                                       String?
+  twitter_url                                        String?
+  whatsapp_url                                       String?
+  accounts                                           Account[]
+  sessions                                           Session[]
+  admin_actions                                      admin_actions[]
+  ai_interactions                                    ai_interactions[]
+  applications                                       applications[]
+  bookmarks                                          bookmarks[]
+  change_requests                                    change_requests[]
+  coin_orders                                        coin_orders[]
+  coin_wallets                                       coin_wallets?
+  comments                                           comments[]
+  contracts_contracts_client_idTousers               contracts[]            @relation("contracts_client_idTousers")
+  contracts_contracts_developer_idTousers            contracts[]            @relation("contracts_developer_idTousers")
+  conversation_members                               conversation_members[]
+  disputes                                           disputes[]
+  events                                             events[]
+  files                                              files[]
+  friend_requests_friend_requests_receiver_idTousers friend_requests[]      @relation("friend_requests_receiver_idTousers")
+  friend_requests_friend_requests_sender_idTousers   friend_requests[]      @relation("friend_requests_sender_idTousers")
+  friends_friends_friend_idTousers                   friends[]              @relation("friends_friend_idTousers")
+  friends_friends_user_idTousers                     friends[]              @relation("friends_user_idTousers")
+  likes                                              likes[]
+  messages                                           messages[]
+  milestone_reviews                                  milestone_reviews[]
+  notifications                                      notifications[]
+  opportunities                                      opportunities[]
+  posts                                              posts[]
+  progress_submissions                               progress_submissions[]
+  project_analytics                                  project_analytics[]
+  project_applications                               project_applications[]
+  project_bookmarks                                  project_bookmarks[]
+  project_comments                                   project_comments[]
+  project_contributors                               project_contributors[]
+  project_events                                     project_events[]
+  project_members                                    project_members[]
+  projects                                           projects[]
+  reels                                              reels[]
+  store_entitlements                                 store_entitlements[]
+  user_ai_preferences                                user_ai_preferences?
+  user_categories                                    user_categories[]
+  user_roles                                         user_roles[]
+  user_skills                                        user_skills[]
+}
+
+model wallets {
+  id         String    @id @db.Uuid
+  user_id    String    @unique @db.Uuid
+  balance    Decimal   @default(0.00) @db.Decimal(10, 2)
+  created_at DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at DateTime? @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+}
+
+model Account {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id              String    @db.Uuid
+  provider             String    @db.VarChar(50)
+  provider_account_id  String    @db.VarChar(255)
+  access_token         String?   @db.Text
+  refresh_token        String?   @db.Text
+  expires_at           DateTime? @db.Timestamptz(6)
+  token_type           String?   @db.VarChar(50)
+  scope                String?   @db.Text
+  id_token             String?   @db.Text
+  created_at           DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at           DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  
+  users                users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, provider_account_id])
+  @@index([user_id])
+  @@index([provider])
+}
+
+model Session {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String   @db.Uuid
+  session_token String   @unique @db.VarChar(255)
+  expires_at    DateTime @db.Timestamptz(6)
+  created_at    DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  
+  users         users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@index([user_id])
+  @@index([expires_at])
+}

@@ -1,0 +1,255 @@
+🔴 MASTER UI RECREATION PROMPT — MagnaCoders Landing Page
+
+Design a modern, clean SaaS-style landing page for a developer community platform called “MagnaCoders.” The overall aesthetic should feel warm, welcoming, professional, and impact-driven, with a soft pastel color palette and strong red accent highlights.
+
+🌈 COLOR SYSTEM
+
+Primary Background: Soft warm pastel yellow (#F9E8B2 to #FBE6A4 gradient feel)
+
+Primary Accent: Bold red (#E50914 or similar)
+
+Secondary Accent: Soft orange (#F4A261)
+
+Text Colors:
+
+Headings: Black (#000000)
+
+Body text: Dark gray (#444444)
+
+Muted text: Gray (#777777)
+
+Cards: Pure white with soft shadow and rounded corners
+
+🧭 TOP NAVIGATION BAR
+
+Horizontal navbar across top
+
+Left side:
+
+Circular logo icon (dark red emblem with tree or abstract crest design)
+
+To the right: “MagnaCoders” text logo
+
+“Magna” in orange
+
+“Coders” in red
+
+Sans-serif, semi-bold
+
+Center nav links:
+
+“Features”
+
+“Community”
+
+“About”
+
+Medium-weight sans-serif, black text, evenly spaced
+
+Right side:
+
+Rounded outline button: “Sign In”
+
+White background
+
+Red border
+
+Red text
+
+Medium pill shape
+
+Solid red pill button: “Join Community”
+
+White text
+
+Fully rounded
+
+Slight shadow
+
+🧱 HERO SECTION LAYOUT (Two-column grid)
+LEFT COLUMN (Text Stack)
+
+At top:
+
+Small rounded pill badge:
+
+White background
+
+Light orange border
+
+Text: “Where Skills Meet Purpose”
+
+Soft drop shadow
+
+Rounded capsule shape
+
+Main heading (large, bold, multi-line):
+
+“Build. Collaborate.
+Create Impact Together”
+
+“Build. Collaborate.” → Black
+
+“Create Impact” → Bold red
+
+“Together” → Black
+
+Font: Large modern sans-serif, heavy weight
+
+Tight line spacing, strong visual hierarchy
+
+Below heading:
+
+Paragraph text:
+
+“Join Kenya's premier community of developers, designers, and innovators. Connect with talent, collaborate on projects, and turn ideas into reality.”
+
+Medium-weight, dark gray
+
+Max-width around 520px
+
+Below paragraph — CTA buttons row:
+
+Left button:
+
+Solid red
+
+Rounded pill
+
+White text
+
+Label: “Get Started Free”
+
+Medium-large size
+
+Slight shadow
+
+Right button:
+
+White background
+
+Red border
+
+Red text
+
+Rounded pill
+
+Label: “Explore Projects”
+
+Below CTAs — stats row:
+
+Horizontal three-column stat bar
+
+5,000+
+
+Red number
+
+Small caption: “Active Members”
+
+1,200+
+
+Orange number
+
+Small caption: “Projects Completed”
+
+98%
+
+Green number
+
+Small caption: “Success Rate”
+
+Font: bold numerals, medium spacing, aligned baseline
+
+🧩 RIGHT COLUMN (Feature Cards Grid)
+
+Four white cards arranged in 2x2 grid, evenly spaced, floating on background with soft shadows and rounded corners.
+
+Each card:
+
+White background
+
+Rounded corners (~16–20px radius)
+
+Soft shadow
+
+Padding ~24px
+
+Card 1 — Top Left
+
+Icon: Red code brackets </>
+Title: Developer Network
+Subtitle: “Connect with skilled developers”
+
+Card 2 — Top Right
+
+Icon: Orange group/users icon
+Title: Team Building
+Subtitle: “Form project teams easily”
+
+Card 3 — Bottom Left
+
+Icon: Red lightbulb
+Title: Share Ideas
+Subtitle: “Bring concepts to life”
+
+Card 4 — Bottom Right
+
+Icon: Orange upward trend arrow
+Title: Grow Together
+Subtitle: “Build your portfolio”
+
+Typography:
+
+Titles: Bold, black
+
+Subtitles: Medium gray, smaller font
+
+Icons aligned top-left inside cards
+
+🧠 SPACING & LAYOUT FEEL
+
+Large whitespace margins
+
+Soft vertical rhythm
+
+No harsh lines or borders
+
+Cards appear slightly floating
+
+Entire hero section centered vertically in viewport
+
+🎯 STYLE VIBE
+
+Friendly startup energy
+
+Community-driven
+
+Youthful but professional
+
+Feels like Notion + Stripe + Startup landing page
+
+Optimized for clarity, trust, and action
+
+⚙️ RESPONSIVENESS RULES
+
+On mobile:
+
+Navbar collapses to hamburger
+
+Hero stacks vertically
+
+Cards become single-column
+
+🧬 RENDER INSTRUCTIONS
+
+Use rounded corners everywhere
+
+Use subtle drop shadows
+
+Avoid harsh contrasts
+
+Keep typography clean and modern
+
+Emphasize red CTAs
+
+Use soft pastel background fill

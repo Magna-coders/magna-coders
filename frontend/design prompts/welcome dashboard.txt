@@ -1,0 +1,320 @@
+🔴 MASTER UI RECREATION PROMPT — MagnaCoders Dashboard / Home Feed
+
+Design a modern SaaS-style community dashboard for a developer collaboration platform called “MagnaCoders.” The interface should feel warm, productive, clean, and momentum-driven, with soft pastel backgrounds, rounded surfaces, subtle shadows, and bold red accent CTAs. Use the exact same brand color system as the MagnaCoders landing and login pages.
+
+🌈 GLOBAL BRAND COLOR SYSTEM (Same as Previous Screens)
+
+Primary Background: Soft warm pastel yellow (#F9E8B2 → #FBE6A4 feel)
+
+Primary Accent: Bold red (#E50914)
+
+Secondary Accent: Soft orange (#F4A261)
+
+Success Accent: Soft green (#2ECC71)
+
+Text Primary: Black (#000000)
+
+Text Secondary: Dark gray (#444444)
+
+Muted Text: Gray (#777777)
+
+Surface Cards: White (#FFFFFF)
+
+Borders: Light translucent gray
+
+🧭 LAYOUT STRUCTURE
+
+Two-column layout:
+
+Left Sidebar (fixed width ~260px)
+
+Main Content Area (fluid width)
+
+Full-height viewport. Soft background color fill everywhere except cards.
+
+📚 LEFT SIDEBAR NAVIGATION
+Top Branding Section
+
+Logo icon: square black background with red/orange crest emblem
+
+To the right: MagnaCoders
+
+“Magna” in orange
+
+“Coders” in red
+
+Bold sans-serif
+
+Below logo:
+
+User Profile Card
+
+Circular avatar with orange gradient background and initials JD
+
+Right of avatar:
+
+Name: John Doe
+
+Role: Full Stack Developer
+
+Small green online status dot near avatar
+
+Navigation Menu Items (Vertical Stack)
+
+Each item:
+
+Rounded pill container
+
+Icon left + text label
+
+Default: transparent background, black text
+
+Hover: light gray background
+
+Active: solid red pill background, white text
+
+Menu items:
+
+Dashboard (active)
+
+Members
+
+Projects → with orange badge “3”
+
+Messages → with orange badge “12”
+
+Opportunities
+
+Reels
+
+Icons: outline style, rounded, consistent stroke weight
+
+QUICK ACTIONS Section
+
+Label: QUICK ACTIONS (small uppercase muted gray)
+
+Buttons:
+
+Create Post
+
+Large pill button
+
+Orange-to-red horizontal gradient
+
+White plus icon + white text
+
+Soft glow shadow
+
+Find Collaborators
+
+White pill button
+
+Gray border
+
+Black text
+
+Resources
+
+White pill button
+
+Gray border
+
+Black text
+
+Bottom Sidebar
+
+Divider line
+
+Settings with gear icon
+
+🧱 MAIN CONTENT AREA
+Top Welcome Card
+
+Large rounded white card centered horizontally.
+
+Text:
+
+Header: “Welcome back, John” (bold black)
+
+Subtext: “What are you building today?” (muted gray)
+
+Below: three stat cards inside main card, horizontally aligned.
+
+Each stat card:
+
+Rounded rectangle
+
+Soft cream background
+
+Large number top, label below
+
+Stats:
+
+3 → Active Projects (red number)
+
+247 → Connections (orange number)
+
+12 → Completed (green number)
+
+Post Composer Card
+
+Below welcome card.
+
+White rounded card with shadow.
+
+Left:
+
+Circular avatar JD
+
+Right:
+
+Input field:
+
+Placeholder: “What are you building today?”
+
+Rounded pill input
+
+Light cream background
+
+Below input:
+
+Action buttons:
+
+Photo (icon + label)
+
+Reel
+
+Project
+
+Icons left of labels
+
+Gray outline style
+
+Filter Pills Row
+
+Horizontal pill filter buttons:
+
+All → Active (solid red background, white text)
+
+Reels → white pill, black text
+
+Projects → white pill, black text
+
+Opportunities → white pill, black text
+
+Designs → white pill, black text
+
+Spacing evenly, rounded capsule shapes
+
+Feed Card (Post Example)
+
+White rounded card with soft shadow.
+
+Left:
+
+Avatar circle JD
+
+Right:
+
+Header row:
+
+Name: John Doe (bold)
+
+Role: CTO at Magna Coders
+
+Dot separator
+
+Time: 2 days ago
+
+Globe icon
+
+Three-dot menu at far right
+
+Post body:
+
+Bold first line:
+
+“Magna Coders is hiring! Senior Frontend Developer”
+
+Paragraph:
+
+“We are looking for an experienced Frontend Developer to join our team and build amazing user experiences.”
+
+Embedded Job Card (Inside Feed Post)
+
+Nested rounded card with green outline border.
+
+Inside:
+
+Top:
+
+Orange square icon with white briefcase
+
+Title:
+
+Senior Frontend Developer
+
+Company: Magna Coders
+
+Meta row:
+
+Location: Nairobi, Kenya (Remote)
+
+Type: Full-time
+
+Salary: Ksh 150,000 – 250,000
+
+Skill tags:
+
+React
+
+TypeScript
+
+Tailwind CSS
+
+Next.js
+Each tag: rounded pill, light gray background
+
+Bottom buttons:
+
+Left: View Details (white pill, gray border)
+
+Right: Apply Now (solid red pill, white text)
+
+🎯 STYLE VIBE
+
+Friendly startup dashboard
+
+Community-first energy
+
+Soft surfaces
+
+Rounded geometry
+
+Zero harsh lines
+
+Red used only for high-impact actions
+
+Warm cream background everywhere else
+
+⚙️ RESPONSIVE RULES
+
+Sidebar collapses to icon-only on tablet
+
+Mobile stacks cards vertically
+
+Filter pills become horizontal scroll
+
+🧬 RENDER INSTRUCTIONS
+
+Use rounded corners everywhere (16–24px radius)
+
+Use subtle shadows, not borders
+
+Use pill buttons and pill tags everywhere
+
+Maintain MagnaCoders color consistency
+
+Keep typography clean, sans-serif, medium-weight
+
+Use icons in outline style

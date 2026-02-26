@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "name": "magna-coders-frontend",
+  "functions": {
+    "app/api/**/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["iad1"],
+  "github": {
+    "silent": true
+  }
+}

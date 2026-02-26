@@ -1,0 +1,189 @@
+import express, { Router } from 'express';
+import {
+  followUser,
+  unfollowUser,
+  getFollowers,
+  getFollowing,
+  getUserFeed,
+  getNotifications,
+  getUnreadNotificationCount,
+  searchUsers,
+} from '../controllers/social';
+import { asyncHandler } from '../middleware/errorHandler';
+import { authenticateToken } from '../middleware/auth';
+
+const router: Router = express.Router();
+
+// Public routes
+/**
+ * @swagger
+ * /api/social/search:
+ *   get:
+ *     summary: Search users by query
+ *     tags: [Social]
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Search string for username or email
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *     responses:
+ *       200:
+ *         description: List of matching users
+ */
+router.get('/search', asyncHandler(searchUsers));
+
+// Protected routes
+router.use(authenticateToken);
+
+/**
+ * @swagger
+ * /api/social/follow/{targetUserId}:
+ *   post:
+ *     summary: Follow a user
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: targetUserId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Target user ID to follow
+ *     responses:
+ *       200:
+ *         description: Followed successfully
+ */
+router.post('/follow/:targetUserId', asyncHandler(followUser));
+
+/**
+ * @swagger
+ * /api/social/follow/{targetUserId}:
+ *   delete:
+ *     summary: Unfollow a user
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: targetUserId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Target user ID to unfollow
+ *     responses:
+ *       200:
+ *         description: Unfollowed successfully
+ */
+router.delete('/follow/:targetUserId', asyncHandler(unfollowUser));
+
+/**
+ * @swagger
+ * /api/social/followers/{userId}:
+ *   get:
+ *     summary: Get followers for a user
+ *     tags: [Social]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: User ID to fetch followers for
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *     responses:
+ *       200:
+ *         description: List of followers
+ */
+router.get('/followers/:userId', asyncHandler(getFollowers));
+
+/**
+ * @swagger
+ * /api/social/following/{userId}:
+ *   get:
+ *     summary: Get users followed by a user
+ *     tags: [Social]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: User ID to fetch following list for
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *     responses:
+ *       200:
+ *         description: List of following users
+ */
+router.get('/following/:userId', asyncHandler(getFollowing));
+
+/**
+ * @swagger
+ * /api/social/feed:
+ *   get:
+ *     summary: Get current user's feed (posts from followed users)
+ *     tags: [Social]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *     responses:
+ *       200:
+ *         description: Feed posts
+ */
+router.get('/feed', asyncHandler(getUserFeed));
+
+/**
+ * @swagger
+ * /api/social/notifications:
+ *   get:
+ *     summary: Get notifications for current user
+ *     tags: [Social, Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *     responses:
+ *       200:
+ *         description: User notifications
+ */
+router.get('/notifications', asyncHandler(getNotifications));
+
+/**
+ * @swagger
+ * /api/social/notifications/unread:
+ *   get:
+ *     summary: Get unread notification count for current user
+ *     tags: [Social, Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unread notification count
+ */
+router.get('/notifications/unread', asyncHandler(getUnreadNotificationCount));
+
+export default router;

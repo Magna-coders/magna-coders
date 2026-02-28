@@ -1,0 +1,289 @@
+🔴 MASTER UI RECREATION PROMPT — MagnaCoders Login Page (Day/Night Themed)
+
+Design a modern, premium authentication screen for a developer community platform called “MagnaCoders.” The interface should feel warm, intelligent, trustworthy, and cinematic, with soft glow lighting, glassmorphism effects, and smooth depth layering — while preserving the exact brand color palette from the main landing page.
+
+🌈 BRAND COLOR SYSTEM (Same as Homepage)
+Day Theme
+
+Primary Background: Soft warm pastel yellow gradient (#F9E8B2 → #FBE6A4)
+
+Primary Accent: Bold red (#E50914)
+
+Secondary Accent: Soft orange (#F4A261)
+
+Text Primary: Black (#000000)
+
+Text Secondary: Dark gray (#444444)
+
+Muted: Gray (#777777)
+
+Card Surface: White with subtle blur and glow
+
+Night Theme
+
+Primary Background: Deep black-to-burnt-orange gradient (#0B0B0B → #3A1C0F → #5C2400 glow center)
+
+Primary Accent: Same bold red (#E50914)
+
+Secondary Accent: Same soft orange (#F4A261)
+
+Text Primary: White (#FFFFFF)
+
+Text Secondary: Light gray (#CCCCCC)
+
+Muted: Gray (#999999)
+
+Card Surface: Frosted glass dark panel with glow edges
+
+Theme switch toggles both palettes smoothly with animated transition.
+
+🧭 TOP AREA (Brand + Theme Toggle)
+
+Centered at top:
+
+Circular square logo block:
+
+Black background square
+
+Red/orange brain-tree crest icon inside
+
+To the right of logo:
+
+Text logo: MagnaCoders
+
+“Magna” in orange
+
+“Coders” in red
+
+Sans-serif, bold
+
+Right corner (floating):
+
+Theme toggle switch
+
+Rounded pill toggle
+
+Sun icon on left, moon icon on right
+
+Smooth animated thumb
+
+Toggles between Day and Night color systems
+
+🧱 PAGE BACKGROUND
+
+Full viewport height.
+
+Day Mode:
+
+Soft radial gradient glow centered behind card using warm yellow/orange tones
+
+Subtle vignette around edges
+
+Clean and bright atmosphere
+
+Night Mode:
+
+Dark black base
+
+Large blurred amber/orange glow behind card
+
+Cinematic depth lighting
+
+Subtle noise/grain overlay for texture
+
+🧩 AUTH CARD (Glass Panel Centered)
+
+Centered vertically and horizontally.
+
+Rounded corners (24px+ radius)
+
+Semi-transparent glass surface
+
+Backdrop blur (15–25px)
+
+Soft outer glow
+
+Subtle border stroke (1px translucent white)
+
+Card width: ~420px
+Padding: ~32px
+
+📝 CARD CONTENT STACK
+Header
+
+Centered text:
+
+“Sign in to continue”
+
+Medium-large font
+
+Semi-bold
+
+White in dark mode, black in day mode
+
+Email Input Field
+
+Label:
+
+“Email Address”
+
+Input:
+
+Rounded rectangle field
+
+Left icon: envelope
+
+Placeholder: “you@example.com
+”
+
+Frosted background with subtle glow
+
+Border changes color on focus to red accent
+
+Password Input Field
+
+Label:
+
+“Password”
+
+Input:
+
+Rounded rectangle
+
+Left icon: lock
+
+Right icon: eye toggle (show/hide password)
+
+Placeholder: “Enter your password”
+
+Same glow and border behavior
+
+Options Row
+
+Left:
+
+Checkbox: “Remember me”
+
+Right:
+
+Text link: “Forgot password?”
+
+Soft orange color
+
+Hover underline
+
+Primary CTA Button
+
+Large full-width button:
+
+Label: “Sign In”
+
+Solid red background
+
+White text
+
+Rounded pill
+
+Glow shadow
+
+Slight hover scale-up animation
+
+Divider
+
+Centered thin horizontal divider:
+
+Text overlay: “Or continue with”
+
+Muted gray
+
+Social Login Buttons (Side-by-side)
+
+Two rounded pill buttons:
+
+Google:
+
+Google logo icon
+
+Text: “Google”
+
+Soft gray surface
+
+GitHub:
+
+GitHub icon
+
+Text: “GitHub”
+
+Soft gray surface
+
+Buttons elevate slightly on hover.
+
+Footer Text
+
+Centered below buttons:
+
+“Don’t have an account? Sign Up”
+
+“Sign Up” in orange accent, clickable
+
+🌗 THEME TOGGLE BEHAVIOR
+
+Toggle icon top-right or top-center
+
+Smooth animated color morph across:
+
+Background
+
+Card surface
+
+Text colors
+
+Input glow
+
+Divider brightness
+
+Transition duration: 300–500ms
+
+Toggle state persisted in local storage/session
+
+🎯 STYLE VIBE
+
+Premium SaaS
+
+Calm, confident, intelligent
+
+Glassmorphism + glow lighting
+
+Feels like Stripe + Linear + modern AI tooling
+
+Soft, non-aggressive contrasts
+
+No harsh borders
+
+Everything rounded
+
+⚙️ RESPONSIVE BEHAVIOR
+
+Mobile:
+
+Card scales to 90% width
+
+Inputs stack vertically
+
+Theme toggle moves into card header
+
+🧬 RENDER INSTRUCTIONS
+
+Use rounded corners everywhere
+
+Use glow instead of heavy shadows
+
+Use blur for depth
+
+Keep hierarchy clear
+
+Maintain MagnaCoders brand colors exactly
+
+Animate hover and focus states
+
+Animate theme switch

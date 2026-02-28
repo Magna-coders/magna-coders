@@ -1,0 +1,103 @@
+create a new screen called user guide.
+it will start asking about gender with options (male, female prefer not to say)
+ then next it will bring the option of changing profile picture
+
+ then next will bring the option of asking with title "what describe you best?"
+ with options of clicking one or two options
+
+Entrepreneur - Creating and leading innovative ventures
+Visionary - Turning ideas into reality
+Software Engineer - Bringing ideas to life through code
+UX/UI Specialist - Designing seamless and engaging user interfaces
+Growth Strategist - Expanding reach and accelerating product growth
+Seed Investor - Empowering the next generation of startups
+Mentor - Guiding founders and teams towards success
+Talent Seeker - Building teams and hiring top talent
+
+next option will bring the option of asking
+
+'what are you looking for , select three that apply?
+Team Member - Collaborate and grow with a team
+Accountability Partner - Stay on track and motivated together
+Mentor - Receive expert guidance and mentorship
+Networking & Opportunities - Connect and offer your skills and services
+Investment Prospect - Discover promising startups to invest in
+Technical Co-founder - Partner to build and scale the product
+design assistance- UI/UX and product design
+
+the next option will be asking 
+tell us more- this makes it easy to find better matches for you
+
+specialisaton
+Frontend
+backend
+full-stack
+mobile
+gaming
+cyber-security
+web 3
+Artificial/ Machine learning
+Data analyst
+Robotics
+
+
+top skills (max 6)
+Node.js, Angular, Vue.js, Python, React, TypeScript,PostgreSQL, MongoDB,
+React Native, Rust, AWS, Docker, Go, kotlin, swift, flutter
+
+available for 
+fulltime roles
+side projectscontract work
+
+next secton will ask 
+share abit info about you with an option of entering not less than 40characters
+
+and location option asking for country location and if user selects 
+kenya it provides the following counties locations
+'Baringo County',
+    'Bomet County',
+    'Bungoma County',
+    'Busia County',
+    'Elgeyo/Marakwet County',
+    'Embu County',
+    'Garissa County',
+    'Homa Bay County',
+    'Isiolo County',
+    'Kajiado County',
+    'Kakamega County',
+    'Kericho County',
+    'Kiambu County',
+    'Kilifi County',
+    'Kirinyaga County',
+    'Kisii County',
+    'Kisumu County',
+    'Kitui County',
+    'Kwale County',
+    'Laikipia County',
+    'Lamu County',
+    'Machakos County',
+    'Makueni County',
+    'Mandera County',
+    'Marsabit County',
+    'Meru County',
+    'Migori County',
+    'Mombasa County',
+    'Murang\'a County',
+    'Nairobi City County',
+    'Nakuru County',
+    'Nandi County',
+    'Narok County',
+    'Nyamira County',
+    'Nyandarua County',
+    'Nyeri County',
+    'Samburu County',
+    'Siaya County',
+    'Taita/Taveta County',
+    'Tana River County',
+    'Tharaka-Nithi County',
+    'Trans Nzoia County',
+    'Turkana County',
+    'Uasin Gishu County',
+    'Vihiga County',
+    'Wajir County',
+    'West Pokot County',

@@ -1,0 +1,39 @@
+Master Refactoring Prompt
+Task: Refactor the following Next.js page to improve modularity by extracting distinct UI sections into reusable components.
+
+Project Context:
+
+Framework: Next.js (App Router) with TypeScript
+Styling: Tailwind CSS
+Icons: Lucide React
+Component Directory: frontend/src/components
+Instructions:
+
+Analyze the Page:
+
+Identify repeated UI patterns (e.g., items inside a .map() loop like cards or list items).
+Identify self-contained logical sections (e.g., specific headers, pagination controls, complex filters, sidebars).
+Identify generic UI elements that could be reused elsewhere.
+Extract Components:
+
+For each identified section, create a new .tsx file in frontend/src/components. except for the top navigation bar and left panel component. we have those
+Name the component descriptively (e.g., ProjectCard.tsx, FilterBar.tsx).
+Props & Types: Define a strict TypeScript interface for the component's props.
+Imports: Move all necessary imports (icons, next/link, next/image, etc.) to the new file.
+Interactivity: If the component needs state or event handlers, decide whether to handle it internally (add "use client") or accept callbacks as props from the parent.
+
+Extract Constants & Data:
+Identify static data arrays, configuration objects, or helper functions defined within the component.
+Move these into a separate `constants.tsx` or `data.ts` file in the same directory.
+Export them and import them back into the main page or the new components as needed.
+Refactor the Original Page:
+
+Import the new components.
+Replace the original JSX code blocks with the new component instances.
+Pass all necessary data and event handlers as props.
+Remove any unused imports or variables to clean up the file.
+Quality Check:
+
+Ensure the visual design (Tailwind classes) remains exactly the same.
+Ensure all interactive elements (buttons, links) still function correctly.
+Target File: frontend/src/app/user-profile/page.tsx 

@@ -1,0 +1,135 @@
+🔴 **MASTER UI RECREATION PROMPT — MagnaCoders Settings Page**
+
+Design a modern SaaS-style settings page for a developer collaboration platform called “MagnaCoders.” The interface should feel warm, user-friendly, clean, and organized, with soft pastel backgrounds, rounded surfaces, subtle shadows, and bold red accent CTAs. Use the same brand color system as the MagnaCoders landing and login pages for consistency.
+
+🌈 **GLOBAL BRAND COLOR SYSTEM (Same as Previous Screens)**
+
+* **Primary Background**: Soft warm pastel yellow (#F9E8B2 → #FBE6A4 feel)
+* **Primary Accent**: Bold red (#E50914)
+* **Secondary Accent**: Soft orange (#F4A261)
+* **Success Accent**: Soft green (#2ECC71)
+* **Text Primary**: Black (#000000)
+* **Text Secondary**: Dark gray (#444444)
+* **Muted Text**: Gray (#777777)
+* **Surface Cards**: White (#FFFFFF)
+* **Borders**: Light translucent gray
+
+🧭 **LAYOUT STRUCTURE**
+
+Two-column layout:
+
+* **Left Sidebar** (fixed width ~260px)
+* **Main Content Area** (fluid width)
+* **Full-height viewport**. Soft background color fill everywhere except cards.
+
+📚 **LEFT SIDEBAR NAVIGATION**
+
+* **Top Branding Section**
+
+  * Logo icon: square black background with red/orange crest emblem
+  * To the right: MagnaCoders
+
+    * "Magna" in orange
+    * "Coders" in red
+    * Bold sans-serif
+
+* **Below logo**:
+
+  * **User Profile Card**
+
+    * Circular avatar with orange gradient background and initials "JD"
+    * Right of avatar:
+
+      * **Name**: John Doe
+      * **Role**: Full Stack Developer
+      * Small **green online status dot** near avatar
+
+* **Navigation Menu Items** (Vertical Stack)
+
+  * Each item:
+
+    * Rounded pill container
+    * Icon left + text label
+    * Default: transparent background, black text
+    * Hover: light gray background
+    * Active: solid red pill background, white text
+  * Menu items:
+
+    * **Dashboard** (active)
+    * **Members**
+    * **Projects** → with orange badge “3”
+    * **Messages** → with orange badge “12”
+    * **Opportunities**
+    * **Reels**
+  * Icons: outline style, rounded, consistent stroke weight
+
+* **QUICK ACTIONS Section**
+
+  * Label: **QUICK ACTIONS** (small uppercase muted gray)
+  * Buttons:
+
+    * **Create Post**
+
+      * Large pill button
+      * Orange-to-red horizontal gradient
+      * White plus icon + white text
+      * Soft glow shadow
+    * **Find Collaborators**
+
+      * White pill button
+      * Gray border
+      * Black text
+    * **Resources**
+
+      * White pill button
+      * Gray border
+      * Black text
+
+* **Bottom Sidebar**
+
+  * Divider line
+  * **Settings** with gear icon
+
+🧱 **MAIN CONTENT AREA**
+
+* **Top Profile Card**
+
+  * Large rounded white card centered horizontally
+  * Text:
+
+    * Header: **"Profile Information"** (bold black)
+    * Subtext: **"Manage your account and preferences"** (muted gray)
+
+* **Profile Information Section**:
+
+  * Display **circular avatar with red initials "JD"** and a **“Change Photo”** button to the right.
+  * Fields for **First Name** and **Last Name**, followed by an email input field.
+  * Below email: **Bio** text area with placeholder text: "Full Stack Developer passionate about building scalable applications."
+  * **Location** input field with placeholder text: "Nairobi, Kenya."
+  * At the bottom of the section, place **Save Changes** and **Cancel** buttons with a prominent red design.
+
+* **Connected Accounts Section**:
+
+  * Display **Connected Accounts** heading.
+  * Show a connection for **Google**, with an email address visible. A **“Disconnect”** button should be visible next to it.
+
+🎯 **STYLE VIBE**
+
+* Friendly and professional layout with a focus on clarity and ease of use.
+* Soft rounded corners, subtle shadows, and clean lines.
+* Red accents should be used primarily for actions, such as the "Save Changes" button and the navigation menu item highlighting.
+
+⚙️ **RESPONSIVE RULES**
+
+* Sidebar collapses to icon-only on tablet
+* Mobile stacks cards vertically
+* Filter pills become horizontal scroll
+
+🧬 **RENDER INSTRUCTIONS**
+
+* Use **rounded corners everywhere** (16–24px radius)
+* Use **subtle shadows**, not harsh borders
+* Use **pill buttons** and **pill tags** everywhere
+* Maintain **MagnaCoders color consistency**
+* Keep **typography clean, sans-serif, medium-weight**
+* Use **outline-style icons**

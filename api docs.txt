@@ -1,0 +1,92 @@
+Profile
+
+
+GET
+/api/auth/profile/{id}
+Get user profile
+
+
+
+PUT
+/api/auth/profile/{id}
+Update user profile
+
+
+Chat
+
+
+GET
+/api/chat
+Get all chats for the current user
+
+
+
+POST
+/api/chat/direct
+Create a direct chat with another user
+
+
+
+POST
+/api/chat/group
+Create a group chat
+
+
+
+GET
+/api/chat/{chatId}/messages
+Get messages from a chat
+
+
+
+POST
+/api/chat/{chatId}/messages
+Send a message to a chat
+
+
+
+DELETE
+/api/chat/{chatId}/leave
+Leave a chat
+Comments
+
+
+GET
+/api/comments/post/{postId}
+Get all comments for a post
+
+
+
+POST
+/api/comments/post/{postId}
+Create a new comment on a post
+
+
+
+PUT
+/api/comments/{id}
+Update a comment
+
+
+
+DELETE
+/api/comments/{id}
+Delete a comment
+
+
+
+POST
+/api/comments/{commentId}/reply
+Create a reply to a comment
+
+
+
+POST
+/api/comments/{id}/like
+Like/Unlike a comment
+
+
+
+POST
+/api/comments/reply/{id}/like
+Like/Unlike a reply

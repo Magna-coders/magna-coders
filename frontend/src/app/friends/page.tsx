@@ -15,8 +15,8 @@ const MOCK_FRIENDS = [
     role: 'Senior Frontend Developer',
     company: 'TechFlow Inc.',
     avatar: 'https://i.pravatar.cc/150?u=1',
-    isOnline: true,
-    mutualFriends: 12,
+    status: 'online',
+    mutual: 12,
     tags: ['React', 'TypeScript', 'UI/UX']
   },
   {
@@ -25,8 +25,8 @@ const MOCK_FRIENDS = [
     role: 'Full Stack Engineer',
     company: 'DevScale',
     avatar: 'https://i.pravatar.cc/150?u=2',
-    isOnline: false,
-    mutualFriends: 8,
+    status: 'offline',
+    mutual: 8,
     tags: ['Node.js', 'Python', 'AWS']
   },
   {
@@ -35,8 +35,8 @@ const MOCK_FRIENDS = [
     role: 'Product Designer',
     company: 'Creative Studio',
     avatar: 'https://i.pravatar.cc/150?u=3',
-    isOnline: true,
-    mutualFriends: 15,
+    status: 'online',
+    mutual: 15,
     tags: ['Figma', 'User Research', 'Prototyping']
   },
   {
@@ -45,8 +45,8 @@ const MOCK_FRIENDS = [
     role: 'DevOps Engineer',
     company: 'CloudSystems',
     avatar: 'https://i.pravatar.cc/150?u=4',
-    isOnline: false,
-    mutualFriends: 5,
+    status: 'offline',
+    mutual: 5,
     tags: ['Docker', 'Kubernetes', 'CI/CD']
   },
   {
@@ -55,8 +55,8 @@ const MOCK_FRIENDS = [
     role: 'Mobile Developer',
     company: 'AppWorks',
     avatar: 'https://i.pravatar.cc/150?u=5',
-    isOnline: true,
-    mutualFriends: 9,
+    status: 'online',
+    mutual: 9,
     tags: ['React Native', 'Swift', 'Kotlin']
   }
 ];

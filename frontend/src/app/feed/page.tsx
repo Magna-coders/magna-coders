@@ -199,13 +199,13 @@ export default function FeedPage() {
           type: (post.type?.toLowerCase() === 'regular' ? 'regular' : post.type?.toLowerCase()) || 'regular',
           author: {
             id: post.userId || post.user?.id,
-            name: post.user?.username || post.author?.username || 'Unknown User',
-            avatar: post.user?.profilePicture || post.author?.avatar_url,
+            name: post.user?.username || 'Unknown User',
+            avatar: post.user?.profilePicture,
             role: post.user?.verified ? 'Verified' : 'Member'
           },
-          createdAt: post.createdAt,
-          likes: post.likesCount || post.likes || 0,
-          comments: post.commentsCount || post.comments || 0,
+          createdAt: formatTimeAgo(post.createdAt),
+          likes: post.likes || 0,
+          comments: post.comments || 0,
           title: post.title,
           content: post.content,
           image: post.mediaUrls?.[0],
@@ -331,7 +331,7 @@ export default function FeedPage() {
                <div ref={lastPostElementRef} key={post.id}>
                  <FeedItem 
                    post={post} 
-                   onRequestJoin={(authorName) => showToast(post.type === 'job' ? `Application sent to ${authorName}!` : `Request sent. ${authorName} will review your request.`)} 
+                   onRequestJoin={(authorName) => showToast((post.type as any) === 'job' ? `Application sent to ${authorName}!` : `Request sent. ${authorName} will review your request.`)} 
                    onDelete={handleDeletePost}
                    isDarkMode={isDarkMode} 
                  />
@@ -342,7 +342,7 @@ export default function FeedPage() {
                <div key={post.id}>
                  <FeedItem 
                    post={post} 
-                   onRequestJoin={(authorName) => showToast(post.type === 'job' ? `Application sent to ${authorName}!` : `Request sent. ${authorName} will review your request.`)} 
+                   onRequestJoin={(authorName) => showToast((post.type as any) === 'job' ? `Application sent to ${authorName}!` : `Request sent. ${authorName} will review your request.`)} 
                    onDelete={handleDeletePost}
                    isDarkMode={isDarkMode} 
                  />

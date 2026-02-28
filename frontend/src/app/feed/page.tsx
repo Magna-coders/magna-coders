@@ -108,9 +108,9 @@ export default function FeedPage() {
               avatar: post.user?.profilePicture,
               role: post.user?.verified ? 'Verified' : 'Member'
             },
-            createdAt: formatTimeAgo(post.createdAt || post.created_at),
-            likes: post.likesCount || post.likes || 0,
-            comments: post.commentsCount || post.comments || 0,
+            createdAt: formatTimeAgo(post.createdAt),
+            likes: post.likes || 0,
+            comments: post.comments || 0,
             title: post.title,
             content: post.content,
             image: post.mediaUrls?.[0],

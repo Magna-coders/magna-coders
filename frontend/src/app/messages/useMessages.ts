@@ -4,9 +4,9 @@ import { getUserChats, getChatMessages, sendMessage as sendMessageService } from
 import type { Conversation, Message } from '@/types';
 
 const MOCK_FRIENDS = [
-  { id: '1', name: 'Alice', avatar: 'https://i.pravatar.cc/150?u=1' },
-  { id: '2', name: 'Bob', avatar: 'https://i.pravatar.cc/150?u=2' },
-  { id: '3', name: 'Charlie', avatar: 'https://i.pravatar.cc/150?u=3' }
+  { id: '1', name: 'Alice', avatar: 'https://i.pravatar.cc/150?u=1', avatarColor: 'bg-blue-100 text-blue-600' },
+  { id: '2', name: 'Bob', avatar: 'https://i.pravatar.cc/150?u=2', avatarColor: 'bg-green-100 text-green-600' },
+  { id: '3', name: 'Charlie', avatar: 'https://i.pravatar.cc/150?u=3', avatarColor: 'bg-purple-100 text-purple-600' }
 ];
 
 const USE_REAL_API = true; // Set to true when backend is ready
@@ -656,14 +656,14 @@ export function useMessages() {
             
             // Add the new message to the conversation (backend returns the created message)
             const currentUserId = localStorage.getItem('userid');
-            const newMessage = {
+            const newMessage: Message = {
               id: response.id,
               sender: 'Me',
               text: response.content,
               time: new Date(response.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               avatar: 'ME',
               isMe: true,
-              type: messageType === 'IMAGE' ? 'image' : 'file',
+              type: (messageType === 'IMAGE' ? 'image' : 'file') as 'image' | 'file',
               imageUrl: messageType === 'IMAGE' ? (response.fileUrl || response.file_url) : undefined,
               fileUrl: messageType === 'FILE' ? (response.fileUrl || response.file_url) : undefined,
               fileName: response.fileName || response.file_name,
@@ -691,7 +691,7 @@ export function useMessages() {
               time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               avatar: 'ME',
               isMe: true,
-              type: messageType === 'IMAGE' ? 'image' : 'file',
+              type: (messageType === 'IMAGE' ? 'image' : 'file') as 'image' | 'file',
               imageUrl: messageType === 'IMAGE' ? URL.createObjectURL(file) : undefined,
               fileName: messageType === 'FILE' ? file.name : undefined,
               fileSize: `${(file.size / 1024).toFixed(1)} KB`,

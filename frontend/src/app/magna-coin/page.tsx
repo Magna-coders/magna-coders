@@ -13,8 +13,26 @@ import PurchaseButton from '@/components/PurchaseButton';
 import Checkout from '@/components/Checkout';
 import SendCoinsModal from '@/components/SendCoinsModal';
 import CreateWalletModal from '@/components/CreateWalletModal';
-import { coinPackages, paymentMethods, transactions } from './constants';
 import { Plus, Send } from 'lucide-react';
+
+const coinPackages = [
+  { id: 1, amount: 100, price: 9.99, bonus: 0 },
+  { id: 2, amount: 500, price: 44.99, bonus: 50 },
+  { id: 3, amount: 1000, price: 89.99, bonus: 150 },
+  { id: 4, amount: 5000, price: 399.99, bonus: 1000 },
+];
+
+const paymentMethods = [
+  { id: 'card', name: 'Credit/Debit Card', icon: 'credit-card' },
+  { id: 'paypal', name: 'PayPal', icon: 'paypal' },
+  { id: 'crypto', name: 'Crypto', icon: 'bitcoin' },
+];
+
+const transactions = [
+  { id: 1, type: 'Purchase', amount: 500, date: '2023-10-25', status: 'Completed' },
+  { id: 2, type: 'Spent', amount: -50, date: '2023-10-26', status: 'Completed', description: 'Premium Feature' },
+  { id: 3, type: 'Bonus', amount: 50, date: '2023-10-25', status: 'Completed' },
+];
 
 interface Wallet {
   id: string;

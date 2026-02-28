@@ -15,7 +15,51 @@ import CourseCurriculum from '@/components/CourseCurriculum';
 import InstructorBio from '@/components/InstructorBio';
 import EnrollmentCard from '@/components/EnrollmentCard';
 
-import { COURSE_DETAILS } from './constants';
+const COURSE_DETAILS = {
+  1: {
+    id: 1,
+    title: 'Full Stack Development',
+    description: 'Master frontend and backend development with modern tools.',
+    instructor: 'John Doe',
+    price: 99.99,
+    rating: 4.8,
+    students: 1234,
+    lessons: 45,
+    duration: '12h 30m',
+    image: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    curriculum: [
+      { title: 'Introduction', duration: '30m' },
+      { title: 'Frontend Basics', duration: '2h' },
+      { title: 'Backend API', duration: '3h' }
+    ],
+    whatYouWillLearn: [
+      'React and Next.js',
+      'Node.js and Express',
+      'Database Design'
+    ]
+  },
+  2: {
+    id: 2,
+    title: 'Advanced React Patterns',
+    description: 'Take your React skills to the next level.',
+    instructor: 'Jane Smith',
+    price: 79.99,
+    rating: 4.9,
+    students: 850,
+    lessons: 30,
+    duration: '8h 15m',
+    image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    curriculum: [
+      { title: 'Hooks Deep Dive', duration: '1h' },
+      { title: 'Performance Optimization', duration: '2h' }
+    ],
+    whatYouWillLearn: [
+      'Custom Hooks',
+      'Context API',
+      'Render Props'
+    ]
+  }
+};
 
 export default function CourseDetailPage() {
   const params = useParams();

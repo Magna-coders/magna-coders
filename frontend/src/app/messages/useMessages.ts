@@ -2,7 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getUserChats, getChatMessages, sendMessage as sendMessageService } from '@/services/messages';
 import type { Conversation, Message } from '@/types';
-import { MOCK_FRIENDS } from './constants';
+
+const MOCK_FRIENDS = [
+  { id: '1', name: 'Alice', avatar: 'https://i.pravatar.cc/150?u=1' },
+  { id: '2', name: 'Bob', avatar: 'https://i.pravatar.cc/150?u=2' },
+  { id: '3', name: 'Charlie', avatar: 'https://i.pravatar.cc/150?u=3' }
+];
 
 const USE_REAL_API = true; // Set to true when backend is ready
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;

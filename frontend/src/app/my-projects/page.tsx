@@ -7,8 +7,42 @@ import MobileDrawer from '@/components/MobileDrawer';
 import ProjectListHeader from '@/components/ProjectListHeader';
 import TabFilters from '@/components/TabFilters';
 import ProjectCard from '@/components/ProjectCard';
-import { PROJECTS, PROJECT_TABS } from './constants';
 import { TRENDING_PROJECTS } from '../projects/data';
+
+const PROJECT_TABS = ['All projects', 'Ongoing', 'Completed', 'Archived'];
+
+const PROJECTS = [
+  {
+    id: 1,
+    title: 'E-commerce Platform Redesign',
+    status: 'Ongoing',
+    description: 'Modernizing the shopping experience with Next.js and Tailwind.',
+    tags: ['Next.js', 'React', 'Tailwind'],
+    members: 4,
+    progress: 65,
+    dueDate: '2023-12-15'
+  },
+  {
+    id: 2,
+    title: 'AI Chatbot Integration',
+    status: 'Completed',
+    description: 'Adding conversational AI capabilities to the support portal.',
+    tags: ['Python', 'OpenAI', 'FastAPI'],
+    members: 3,
+    progress: 100,
+    dueDate: '2023-10-30'
+  },
+  {
+    id: 3,
+    title: 'Mobile App MVP',
+    status: 'Archived',
+    description: 'Initial prototype for the mobile application.',
+    tags: ['React Native', 'Firebase'],
+    members: 2,
+    progress: 100,
+    dueDate: '2023-08-20'
+  }
+];
 
 export default function MyProjectsPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

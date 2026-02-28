@@ -8,7 +8,58 @@ import TopNavigation from '../../components/TopNavigation';
 import FriendCard from '../../components/FriendCard';
 import Pagination from '../../components/Pagination';
 
-import { MOCK_FRIENDS } from '../../utils/friendsData';
+const MOCK_FRIENDS = [
+  {
+    id: 1,
+    name: 'Sarah Chen',
+    role: 'Senior Frontend Developer',
+    company: 'TechFlow Inc.',
+    avatar: 'https://i.pravatar.cc/150?u=1',
+    isOnline: true,
+    mutualFriends: 12,
+    tags: ['React', 'TypeScript', 'UI/UX']
+  },
+  {
+    id: 2,
+    name: 'Michael Ross',
+    role: 'Full Stack Engineer',
+    company: 'DevScale',
+    avatar: 'https://i.pravatar.cc/150?u=2',
+    isOnline: false,
+    mutualFriends: 8,
+    tags: ['Node.js', 'Python', 'AWS']
+  },
+  {
+    id: 3,
+    name: 'Emma Wilson',
+    role: 'Product Designer',
+    company: 'Creative Studio',
+    avatar: 'https://i.pravatar.cc/150?u=3',
+    isOnline: true,
+    mutualFriends: 15,
+    tags: ['Figma', 'User Research', 'Prototyping']
+  },
+  {
+    id: 4,
+    name: 'David Kim',
+    role: 'DevOps Engineer',
+    company: 'CloudSystems',
+    avatar: 'https://i.pravatar.cc/150?u=4',
+    isOnline: false,
+    mutualFriends: 5,
+    tags: ['Docker', 'Kubernetes', 'CI/CD']
+  },
+  {
+    id: 5,
+    name: 'Lisa Patel',
+    role: 'Mobile Developer',
+    company: 'AppWorks',
+    avatar: 'https://i.pravatar.cc/150?u=5',
+    isOnline: true,
+    mutualFriends: 9,
+    tags: ['React Native', 'Swift', 'Kotlin']
+  }
+];
 
 // Mock Data removed - using imported MOCK_FRIENDS
 

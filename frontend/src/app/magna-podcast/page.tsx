@@ -8,7 +8,33 @@ import PodcastHero from '@/components/PodcastHero';
 import PodcastFilter from '@/components/PodcastFilter';
 import PodcastCard from '@/components/PodcastCard';
 import PodcastPlayer from '@/components/PodcastPlayer';
-import { PODCASTS } from './constants';
+
+const PODCASTS = [
+  {
+    id: 1,
+    title: 'The Future of AI in Coding',
+    host: 'Magna Team',
+    duration: '45 min',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    description: 'Exploring how AI is transforming software development.'
+  },
+  {
+    id: 2,
+    title: 'Web3 and Decentralized Apps',
+    host: 'Magna Team',
+    duration: '38 min',
+    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    description: 'Deep dive into blockchain and dApps.'
+  },
+  {
+    id: 3,
+    title: 'Career Growth for Developers',
+    host: 'Magna Team',
+    duration: '52 min',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    description: 'Tips and strategies for advancing your tech career.'
+  }
+];
 
 export default function MagnaPodcastPage() {
   const [activeTab, setActiveTab] = useState('Magna Podcast');

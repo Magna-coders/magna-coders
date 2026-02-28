@@ -20,8 +20,18 @@ import ChatSidebar from '@/components/ChatSidebar';
 import FloatingActionMenu from '@/components/FloatingActionMenu';
 import MobileDrawer from '@/components/MobileDrawer';
 
-import { getGroupMembers } from './constants';
 import { useMessages } from './useMessages';
+
+const getGroupMembers = (chat: any) => {
+  if (!chat || !chat.participants) return [];
+  return chat.participants.map((p: any) => ({
+    id: typeof p === 'string' ? p : p.id,
+    name: typeof p === 'string' ? `User ${p}` : p.name,
+    role: 'Member',
+    avatar: `https://i.pravatar.cc/150?u=${typeof p === 'string' ? p : p.id}`,
+    isOnline: Math.random() > 0.5
+  }));
+};
 
 export default function MessagesPage() {
   return (

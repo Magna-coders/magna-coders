@@ -8,7 +8,50 @@ import CategoryFilter from '@/components/CategoryFilter';
 import CourseCard from '@/components/CourseCard';
 import EmptyState from '@/components/EmptyState';
 import Checkout from '@/components/Checkout';
-import { COURSES, CATEGORIES } from './constants';
+
+const CATEGORIES = ['All', 'Web Development', 'Data Science', 'Mobile Dev', 'Cloud Computing', 'Design'];
+
+const COURSES = [
+  {
+    id: 1,
+    title: 'Full Stack Development',
+    description: 'Master frontend and backend development with modern tools.',
+    instructor: 'John Doe',
+    price: 99.99,
+    rating: 4.8,
+    students: 1234,
+    image: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'Web Development',
+    level: 'Intermediate',
+    duration: '12h 30m'
+  },
+  {
+    id: 2,
+    title: 'Advanced React Patterns',
+    description: 'Take your React skills to the next level.',
+    instructor: 'Jane Smith',
+    price: 79.99,
+    rating: 4.9,
+    students: 850,
+    image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'Web Development',
+    level: 'Advanced',
+    duration: '8h 15m'
+  },
+  {
+    id: 3,
+    title: 'Python for Data Science',
+    description: 'Learn Python and popular libraries for data analysis.',
+    instructor: 'Data Wizard',
+    price: 89.99,
+    rating: 4.7,
+    students: 2000,
+    image: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    category: 'Data Science',
+    level: 'Beginner',
+    duration: '15h 00m'
+  }
+];
 
 export default function MagnaSchoolPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");

@@ -104,8 +104,8 @@ export default function FeedPage() {
             type: (post.type?.toLowerCase() === 'regular' ? 'regular' : post.type?.toLowerCase()) || 'regular',
             author: {
               id: post.userId || post.user?.id,
-              name: post.user?.username || post.author?.username || 'Unknown User',
-              avatar: post.user?.profilePicture || post.author?.avatar_url,
+              name: post.user?.username || 'Unknown User',
+              avatar: post.user?.profilePicture,
               role: post.user?.verified ? 'Verified' : 'Member'
             },
             createdAt: formatTimeAgo(post.createdAt || post.created_at),

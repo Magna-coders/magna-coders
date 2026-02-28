@@ -73,7 +73,7 @@ export default function BuildersPage() {
             avatar: user.avatar_url || null,
             github_url: user.github_url || null,
             linkedin_url: user.linkedin_url || null,
-            portfolio_url: user.portfolio_url || null,
+            portfolio_url: user.website_url || null,
             whatsapp_url: user.whatsapp_url || null
           };
         });

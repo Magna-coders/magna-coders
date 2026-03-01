@@ -48,7 +48,7 @@ export default function JobCard({ job, isDarkMode, showExpiration = false, isCom
   const checkBookmarkState = async () => {
     try {
       const response = await getBookmarkState(String(job.opportunityId));
-      setIsBookmarked(response.bookmarked || false);
+      setIsBookmarked((response as any).bookmarked || false);
     } catch (error) {
       // Silently fail - bookmark state is not critical
     }
@@ -85,7 +85,7 @@ export default function JobCard({ job, isDarkMode, showExpiration = false, isCom
     try {
       const response = await bookmarkJob(String(job.opportunityId));
       // Toggle based on response
-      setIsBookmarked(response.bookmarked || false);
+      setIsBookmarked((response as any).bookmarked || false);
       if (onJobUpdate) onJobUpdate();
     } catch (error: any) {
       alert(error?.message || 'Failed to update bookmark');

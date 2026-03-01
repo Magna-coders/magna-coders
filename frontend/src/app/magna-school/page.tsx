@@ -13,7 +13,7 @@ const CATEGORIES = ['All', 'Web Development', 'Data Science', 'Mobile Dev', 'Clo
 
 const COURSES = [
   {
-    id: 1,
+    id: '1',
     title: 'Full Stack Development',
     description: 'Master frontend and backend development with modern tools.',
     instructor: 'John Doe',
@@ -27,7 +27,7 @@ const COURSES = [
     duration: '12h 30m'
   },
   {
-    id: 2,
+    id: '2',
     title: 'Advanced React Patterns',
     description: 'Take your React skills to the next level.',
     instructor: 'Jane Smith',
@@ -41,7 +41,7 @@ const COURSES = [
     duration: '8h 15m'
   },
   {
-    id: 3,
+    id: '3',
     title: 'Python for Data Science',
     description: 'Learn Python and popular libraries for data analysis.',
     instructor: 'Data Wizard',

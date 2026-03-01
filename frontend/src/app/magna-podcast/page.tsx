@@ -16,7 +16,10 @@ const PODCASTS = [
     host: 'Magna Team',
     duration: '45 min',
     image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    description: 'Exploring how AI is transforming software development.'
+    description: 'Exploring how AI is transforming software development.',
+    tags: ['AI', 'Technology', 'Programming'],
+    date: '2024-01-15',
+    role: 'Host'
   },
   {
     id: 2,
@@ -24,7 +27,10 @@ const PODCASTS = [
     host: 'Magna Team',
     duration: '38 min',
     image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    description: 'Deep dive into blockchain and dApps.'
+    description: 'Deep dive into blockchain and dApps.',
+    tags: ['Web3', 'Blockchain', 'Crypto'],
+    date: '2024-01-10',
+    role: 'Host'
   },
   {
     id: 3,
@@ -32,7 +38,10 @@ const PODCASTS = [
     host: 'Magna Team',
     duration: '52 min',
     image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    description: 'Tips and strategies for advancing your tech career.'
+    description: 'Tips and strategies for advancing your tech career.',
+    tags: ['Career', 'Development', 'Growth'],
+    date: '2024-01-05',
+    role: 'Host'
   }
 ];
 

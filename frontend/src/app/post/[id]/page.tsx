@@ -44,7 +44,7 @@ export default function PostDetailPage() {
           if (foundPost) {
             // Map to component format (same as feed page)
             const type = (foundPost.type?.toLowerCase() === 'regular' ? 'regular' : foundPost.type?.toLowerCase()) || 'regular';
-            const mappedPost: FeedPost = {
+            const mappedPost = {
               id: foundPost.id,
               type: type as 'regular' | 'job' | 'project' | 'tech-news',
               author: {
@@ -70,7 +70,7 @@ export default function PostDetailPage() {
               source: foundPost.newsSource,
               url: foundPost.newsUrl,
               imageUrl: foundPost.mediaUrls?.[0],
-            };
+            } as unknown as FeedPost;
             setPost(mappedPost);
           } else {
             setPost(null);

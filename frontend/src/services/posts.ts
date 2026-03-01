@@ -102,7 +102,7 @@ export const getPosts = async (params: GetPostsParams = {}): Promise<Post[]> => 
   if (params.search) searchParams.set('search', params.search);
 
   const query = searchParams.toString();
-  const data = await apiFetch<any>(`api/posts${query ? `?${query}` : ''}`, { method: 'GET' });
+  const data = await apiFetch<any>(`/posts${query ? `?${query}` : ''}`, { method: 'GET' });
 
   // Handle different response formats
   if (Array.isArray(data)) {

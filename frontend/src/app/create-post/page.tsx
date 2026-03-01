@@ -51,7 +51,7 @@ export default function CreatePostPage() {
         }
 
         const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
-        const response = await fetch(`${apiBase}/auth/profile/${userId}`, {
+        const response = await fetch(`${apiBase}/api/auth/profile/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json'
@@ -182,7 +182,7 @@ export default function CreatePostPage() {
       }
 
       const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
-      const response = await fetch(`${apiBase}/posts`, {
+      const response = await fetch(`${apiBase}/api/posts`, {
         method: 'POST',
         headers: {
           'accept': 'application/json',

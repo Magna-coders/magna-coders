@@ -28,7 +28,7 @@ export default function Toast({ message, isVisible, onClose, duration = 3000 }: 
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-[#333333] text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3 z-[10000] min-w-[300px] max-w-[90vw]"
+          className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-[#333333] text-white px-4 py-2 md:px-6 md:py-3 rounded-full shadow-lg flex items-center gap-2 md:gap-3 z-[10000] max-w-[90vw] text-sm md:text-base"
         >
           <CheckCircle2 size={20} className="text-[#2ECC71]" />
           <span className="text-sm font-medium flex-1">{message}</span>

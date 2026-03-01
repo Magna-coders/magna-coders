@@ -257,13 +257,13 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {errors.form && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-500 text-sm text-center">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 md:p-3 text-red-500 text-xs md:text-sm text-center">
               {errors.form}
             </motion.div>
           )}
 
           {errors.general && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-500 text-sm text-center">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 md:p-3 text-red-500 text-xs md:text-sm text-center">
               {errors.general}
             </motion.div>
           )}
@@ -285,7 +285,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
               />
             </div>
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+            {errors.email && <p className="text-red-500 text-[10px] md:text-xs mt-1">{errors.email}</p>}
           </div>
 
           {/* Password Field */}
@@ -312,7 +312,7 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+            {errors.password && <p className="text-red-500 text-[10px] md:text-xs mt-1">{errors.password}</p>}
           </div>
 
           {/* Options Row */}

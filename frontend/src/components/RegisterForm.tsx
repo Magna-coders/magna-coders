@@ -166,7 +166,7 @@ export default function RegisterForm({ isDarkMode, onRegisterSuccess }: Register
               placeholder="johndoe"
             />
           </div>
-          {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+          {errors.username && <p className="text-red-500 text-[10px] md:text-xs mt-1">{errors.username}</p>}
         </div>
 
         {/* Email Field */}
@@ -186,7 +186,7 @@ export default function RegisterForm({ isDarkMode, onRegisterSuccess }: Register
               placeholder="you@example.com"
             />
           </div>
-          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+          {errors.email && <p className="text-red-500 text-[10px] md:text-xs mt-1">{errors.email}</p>}
         </div>
 
         {/* Password Field */}
@@ -213,7 +213,7 @@ export default function RegisterForm({ isDarkMode, onRegisterSuccess }: Register
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+          {errors.password && <p className="text-red-500 text-[10px] md:text-xs mt-1">{errors.password}</p>}
         </div>
 
         {/* Confirm Password Field */}
@@ -240,7 +240,7 @@ export default function RegisterForm({ isDarkMode, onRegisterSuccess }: Register
               {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+          {errors.confirmPassword && <p className="text-red-500 text-[10px] md:text-xs mt-1">{errors.confirmPassword}</p>}
         </div>
 
         {/* Primary CTA */}

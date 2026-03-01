@@ -52,7 +52,7 @@ export default function NotificationItem({
   return (
     <div 
       onClick={() => onMarkAsRead(notification.id)}
-      className={`group relative flex items-start gap-4 p-5 rounded-2xl transition-all cursor-pointer border-l-4 ${
+      className={`group relative flex items-start gap-3 md:gap-4 p-3 md:p-5 rounded-2xl transition-all cursor-pointer border-l-4 ${
         notification.read 
           ? isDarkMode ? 'bg-transparent border-transparent hover:bg-[#111]' : 'bg-transparent border-transparent hover:bg-white hover:shadow-sm'
           : isDarkMode ? 'bg-[#111] border-[#E50914]' : 'bg-white border-[#E50914] shadow-sm'
@@ -61,13 +61,13 @@ export default function NotificationItem({
       {/* Avatar */}
       <div className="relative flex-shrink-0">
         {notification.actor.avatar ? (
-          <img src={notification.actor.avatar} alt={notification.actor.name} className="w-12 h-12 rounded-full object-cover" />
+          <img src={notification.actor.avatar} alt={notification.actor.name} className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover" />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#F4A261] to-[#E50914] flex items-center justify-center text-white font-bold text-sm shadow-sm">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#F4A261] to-[#E50914] flex items-center justify-center text-white font-bold text-xs md:text-sm shadow-sm">
             {notification.actor.initials}
           </div>
         )}
-        <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-sm border ${
+        <div className={`absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center shadow-sm border ${
           isDarkMode ? 'bg-[#222] border-black' : 'bg-white border-white'
         }`}>
           {getIcon(notification.type)}
@@ -77,8 +77,8 @@ export default function NotificationItem({
       {/* Content */}
       <div className="flex-1 min-w-0 pt-0.5">
         <div className="flex items-start justify-between gap-2">
-          <div className="pr-8">
-            <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          <div className="pr-4 md:pr-8">
+            <p className={`text-xs md:text-sm leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
               <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{notification.actor.name}</span>{' '}
               <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>{notification.content}</span>{' '}
               {notification.target && <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>"{notification.target}"</span>}
@@ -89,17 +89,17 @@ export default function NotificationItem({
 
         {/* Action Buttons (for Requests) */}
         {notification.actionRequired && notification.requestStatus === 'pending' && onAccept && onDecline && (
-          <div className="flex gap-3 mt-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-3 md:mt-4">
             <button 
               onClick={(e) => onAccept(notification.id, e)}
-              className="px-6 py-2 rounded-full bg-[#E50914] text-white text-xs font-bold hover:bg-[#cc0812] transition-all shadow-md flex items-center gap-2"
+              className="px-4 py-2 md:px-6 md:py-2 rounded-full bg-[#E50914] text-white text-xs font-bold hover:bg-[#cc0812] transition-all shadow-md flex items-center justify-center gap-2"
             >
               <Check size={14} />
               Accept
             </button>
             <button 
               onClick={(e) => onDecline(notification.id, e)}
-              className={`px-6 py-2 rounded-full border text-xs font-bold transition-all ${
+              className={`px-4 py-2 md:px-6 md:py-2 rounded-full border text-xs font-bold transition-all ${
               isDarkMode 
                 ? 'border-gray-700 text-gray-300 hover:bg-[#222] hover:text-white' 
                 : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black'

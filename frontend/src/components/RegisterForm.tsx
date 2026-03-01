@@ -258,7 +258,7 @@ export default function RegisterForm({ isDarkMode, onRegisterSuccess }: Register
           )}
         </motion.button>
 
-        {/* Divider */}
+        {/* Divider - Hidden for now
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className={`w-full border-t ${theme.divider}`}></div>
@@ -267,13 +267,15 @@ export default function RegisterForm({ isDarkMode, onRegisterSuccess }: Register
             <span className={`px-2 ${isDarkMode ? 'bg-[#1A1A1A] text-gray-400' : 'bg-white/50 text-gray-500'} backdrop-blur-sm rounded`}>Or sign up with</span>
           </div>
         </div>
+        */}
 
-        {/* Social Buttons */}
+        {/* Social Buttons - Hidden for now
         <SocialAuthButtons 
           isDarkMode={isDarkMode} 
           onGoogleClick={handleGoogleLogin}
           onGithubClick={handleGithubLogin}
         />
+        */}
       </form>
 
       {/* Footer */}

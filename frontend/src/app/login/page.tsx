@@ -344,7 +344,7 @@ export default function LoginPage() {
             )}
           </motion.button>
 
-          {/* Divider */}
+          {/* Divider - Hidden for now
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className={`w-full border-t ${theme.divider}`}></div>
@@ -353,8 +353,9 @@ export default function LoginPage() {
               <span className={`px-2 ${isDarkMode ? 'bg-[#1A1A1A] text-gray-400' : 'bg-white/50 text-gray-500'} backdrop-blur-sm rounded`}>Or continue with</span>
             </div>
           </div>
+          */}
 
-          {/* Social Buttons */}
+          {/* Social Buttons - Hidden for now
           <div className="grid grid-cols-2 gap-4">
             <button 
               type="button" 
@@ -378,6 +379,7 @@ export default function LoginPage() {
               <span className="font-medium text-sm">GitHub</span>
             </button>
           </div>
+          */}
         </form>
 
         {/* Footer */}

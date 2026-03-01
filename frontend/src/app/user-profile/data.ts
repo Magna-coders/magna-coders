@@ -1,3 +1,10 @@
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+}
+
 export interface UserProfile {
   name: string;
   username: string;
@@ -54,6 +61,21 @@ export const USER_DATA: UserProfile = {
   activitiesList: [],
   connectionsList: []
 };
+
+export interface Activity {
+  type: 'project' | 'connection' | 'comment';
+  text: string;
+  time: string;
+}
+
+export interface Connection {
+  name: string;
+  role: string;
+}
+
+export interface Project {
+  tags: string[];
+}
 
 export const PROFILE_TABS = [
   'Overview',

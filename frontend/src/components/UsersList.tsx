@@ -9,8 +9,8 @@ const UsersList: React.FC = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const data = await getUsers();
-        setUsers(data);
+        const response = await getUsers();
+        setUsers(response.users);
       } catch (err) {
         setError('Failed to fetch users');
         console.error(err);
@@ -32,12 +32,12 @@ const UsersList: React.FC = () => {
         {users.map((user) => (
           <div key={user.id} className="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
             <img
-              src={user.profilePicture || 'https://via.placeholder.com/50'}
-              alt={user.name}
-              className="w-12 h-12 rounded-full"
-            />
-            <div>
-              <h3 className="font-semibold">{user.name}</h3>
+                src={user.avatar_url || 'https://via.placeholder.com/50'}
+                alt={user.username}
+                className="w-12 h-12 rounded-full"
+              />
+              <div>
+                <h3 className="font-semibold">{user.username}</h3>
               <p className="text-gray-500 text-sm">@{user.username}</p>
             </div>
           </div>

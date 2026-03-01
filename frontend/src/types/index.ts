@@ -60,16 +60,22 @@ export interface JobPost extends BasePost {
   location?: string;
   salary?: string;
   jobType?: string;
+  description?: string;
+  timeLeft?: string;
+  deadlineProgress?: number;
 }
 
 export interface ProjectPost extends BasePost {
   type: 'project';
   description?: string;
   techStack?: string[];
+  requestsSent?: number;
+  membersNeeded?: number;
 }
 
 export interface TechNewsPost extends BasePost {
   type: 'tech-news';
+  title: string;
   summary?: string;
   source?: string;
   url?: string;

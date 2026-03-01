@@ -103,7 +103,7 @@ export default function ProjectsPage() {
     }
   };
 
-  const lastProjectRef = React.useCallback((node: HTMLDivElement) => {
+  const lastProjectRef = React.useCallback((node: HTMLAnchorElement) => {
     if (loading || loadingMore) return;
     
     const observer = new IntersectionObserver(entries => {

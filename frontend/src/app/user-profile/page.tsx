@@ -54,7 +54,8 @@ function UserProfileContent() {
         const userId = profileUserId || localStorage.getItem('userId') || localStorage.getItem('userid');
         if (userId) {
           const token = localStorage.getItem('accessToken');
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/profile/${userId}`, {
+          const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+          const response = await fetch(`${apiBase}/auth/profile/${userId}`, {
             method: 'GET',
             headers: {
               'Accept': 'application/json',

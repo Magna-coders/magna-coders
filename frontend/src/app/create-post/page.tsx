@@ -50,7 +50,8 @@ export default function CreatePostPage() {
           return;
         }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/profile/${userId}`, {
+        const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+        const response = await fetch(`${apiBase}/auth/profile/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json'
@@ -180,7 +181,8 @@ export default function CreatePostPage() {
         postData.mediaUrls = [selectedImage];
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/posts`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const response = await fetch(`${apiBase}/posts`, {
         method: 'POST',
         headers: {
           'accept': 'application/json',

@@ -42,6 +42,57 @@ const authenticatedFetch = async (endpoint: string, options: RequestInit = {}) =
   return response.json();
 };
 
+// Safe helper functions to prevent object rendering errors
+const safeText = (v: any): string => { 
+  if (v == null) return ''; 
+  if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v); 
+
+  // arrays -> join readable values 
+  if (Array.isArray(v)) { 
+    return v 
+      .map((x) => (x && typeof x === 'object' ? (x.name ?? x.title ?? x.label ?? x.id) : x)) 
+      .map((x) => (x == null ? '' : String(x))) 
+      .filter(Boolean) 
+      .join(', '); 
+  } 
+
+  // objects -> pick common display fields 
+  if (typeof v === 'object') { 
+    if (typeof v.name === 'string') return v.name; 
+    if (typeof v.title === 'string') return v.title; 
+    if (typeof v.label === 'string') return v.label; 
+    if (v.id != null) return String(v.id); 
+    return ''; 
+  } 
+
+  return String(v); 
+}; 
+
+const safeId = (v: any): string => { 
+  if (v == null) return ''; 
+  if (typeof v === 'string' || typeof v === 'number') return String(v); 
+  if (typeof v === 'object' && v.id != null) return String(v.id); 
+  return String(v); 
+}; 
+
+const safeNumber = (v: any): number => { 
+  if (typeof v === 'number' && Number.isFinite(v)) return v; 
+  if (typeof v === 'string') { 
+    const n = Number(v); 
+    return Number.isFinite(n) ? n : 0; 
+  } 
+  if (Array.isArray(v)) return v.length; // common backend pattern: likes/comments as arrays 
+  if (typeof v === 'object' && v != null) { 
+    // sometimes { count: 3 } or { likesCount: 3 } 
+    const n = 
+      (typeof (v as any).count === 'number' && (v as any).count) || 
+      (typeof (v as any).likesCount === 'number' && (v as any).likesCount) || 
+      (typeof (v as any).commentsCount === 'number' && (v as any).commentsCount); 
+    return Number.isFinite(n) ? n : 0; 
+  } 
+  return 0; 
+};
+
 interface PostInteractionBarProps {
   initialLikes: number;
   initialComments: number;
@@ -67,13 +118,13 @@ function CommentItem({ comment, onLike, onDelete, onEdit, onReply }: CommentItem
   const [replyContent, setReplyContent] = useState('');
 
   const handleSaveEdit = () => {
-    onEdit(comment.id, editContent);
+    onEdit(safeId(comment.id), editContent);
     setIsEditing(false);
   };
 
   const handleSendReply = () => {
     if (!replyContent.trim()) return;
-    onReply(comment.id, replyContent);
+    onReply(safeId(comment.id), replyContent);
     setReplyContent('');
     setShowReplyInput(false);
   };
@@ -81,17 +132,17 @@ function CommentItem({ comment, onLike, onDelete, onEdit, onReply }: CommentItem
   return (
     <div className="flex gap-3">
       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#F4A261] to-[#E50914] flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative overflow-hidden">
-          {comment.author.avatar && (comment.author.avatar.startsWith('/') || comment.author.avatar.startsWith('http')) ? (
-              <Image src={comment.author.avatar} alt={comment.author.name} fill sizes="32px" className="object-cover" />
+          {comment.author?.avatar && (safeText(comment.author.avatar).startsWith('/') || safeText(comment.author.avatar).startsWith('http')) ? (
+              <Image src={safeText(comment.author.avatar)} alt={safeText(comment.author?.name)} fill sizes="32px" className="object-cover" />
           ) : (
-              comment.author.name.charAt(0)
+              safeText(comment.author?.name).charAt(0)
           )}
       </div>
       <div className="flex-1">
           <div className="bg-gray-50 p-3 rounded-xl rounded-tl-none">
             <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-sm text-gray-900">{comment.author.name}</span>
-                <span className="text-xs text-gray-400">{comment.createdAt}</span>
+                <span className="font-bold text-sm text-gray-900">{safeText(comment.author?.name)}</span>
+                <span className="text-xs text-gray-400">{safeText(comment.createdAt)}</span>
             </div>
             
             {isEditing ? (
@@ -108,17 +159,17 @@ function CommentItem({ comment, onLike, onDelete, onEdit, onReply }: CommentItem
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-700">{comment.content}</p>
+              <p className="text-sm text-gray-700">{safeText(comment.content)}</p>
             )}
           </div>
 
           <div className="flex items-center gap-4 mt-1 pl-1">
             <button 
-              onClick={() => onLike(comment.id)}
+              onClick={() => onLike(safeId(comment.id))}
               className={`flex items-center gap-1 text-xs font-medium transition-colors ${comment.isLiked ? 'text-[#E50914]' : 'text-gray-500 hover:text-[#E50914]'}`}
             >
               <Heart size={12} className={comment.isLiked ? 'fill-[#E50914]' : ''} />
-              {comment.likes > 0 && <span>{comment.likes}</span>}
+              {safeNumber(comment.likes) > 0 && <span>{safeNumber(comment.likes)}</span>}
               Like
             </button>
             
@@ -140,7 +191,7 @@ function CommentItem({ comment, onLike, onDelete, onEdit, onReply }: CommentItem
                   Edit
                 </button>
                 <button 
-                  onClick={() => onDelete(comment.id)}
+                  onClick={() => onDelete(safeId(comment.id))}
                   className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-[#E50914] transition-colors"
                 >
                   <Trash2 size={12} />
@@ -157,7 +208,7 @@ function CommentItem({ comment, onLike, onDelete, onEdit, onReply }: CommentItem
                   type="text" 
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
-                  placeholder={`Reply to ${comment.author.name}...`}
+                  placeholder={`Reply to ${safeText(comment.author?.name)}...`}
                   className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-3 py-1.5 text-xs focus:outline-none focus:border-[#E50914]"
                 />
                 <button 
@@ -173,9 +224,9 @@ function CommentItem({ comment, onLike, onDelete, onEdit, onReply }: CommentItem
           {/* Nested Replies */}
           {comment.replies && comment.replies.length > 0 && (
             <div className="mt-3 pl-3 border-l-2 border-gray-100 space-y-3">
-              {comment.replies.map(reply => (
+              {comment.replies?.map((reply) => (
                 <CommentItem 
-                  key={reply.id} 
+                  key={safeId(reply?.id)} 
                   comment={reply} 
                   onLike={onLike} 
                   onDelete={onDelete} 
@@ -199,9 +250,9 @@ export default function PostInteractionBar({
   children,
   className = ""
 }: PostInteractionBarProps) {
-  const [liked, setLiked] = useState(initialLiked); // Use initialLiked
-  const [likes, setLikes] = useState(initialLikes);
-  const [commentsCount, setCommentsCount] = useState(initialComments);
+  const [liked, setLiked] = useState(!!initialLiked);
+  const [likes, setLikes] = useState(safeNumber(initialLikes));
+  const [commentsCount, setCommentsCount] = useState(safeNumber(initialComments));
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
@@ -217,7 +268,7 @@ export default function PostInteractionBar({
     if (USE_REAL_API && showComments) {
       const fetchComments = async () => {
         try {
-          const res = await authenticatedFetch(`/posts/${postId}/comments?page=1&limit=20`);
+          const res = await authenticatedFetch(`/api/posts/${postId}/comments?page=1&limit=20`);
           setComments(res.comments || res || []);
         } catch (error) {
           console.error('Failed to fetch comments:', error);
@@ -265,7 +316,7 @@ export default function PostInteractionBar({
     e.preventDefault();
     if (!commentText.trim()) return;
     try {
-      const newComment: Comment = await authenticatedFetch(`/posts/${postId}/comments`, {
+      const newComment: Comment = await authenticatedFetch(`/api/posts/${postId}/comments`, {
         method: 'POST',
         body: JSON.stringify({ content: commentText })
       });
@@ -345,7 +396,7 @@ export default function PostInteractionBar({
 
   const handleReplyComment = async (parentId: string, replyContent: string) => {
     try {
-      const reply: Comment = await authenticatedFetch(`/posts/${postId}/comments`, {
+      const reply: Comment = await authenticatedFetch(`/api/posts/${postId}/comments`, {
         method: 'POST',
         body: JSON.stringify({ content: replyContent, parentId })
       });
@@ -408,7 +459,7 @@ export default function PostInteractionBar({
                   className={`flex items-center gap-2 transition-colors group cursor-pointer ${liked ? 'text-[#E50914]' : 'text-gray-500 hover:text-[#E50914]'}`}
               >
                  <Heart size={20} className={liked ? 'fill-[#E50914]' : 'group-hover:fill-[#E50914]'} />
-                 <span className="text-sm font-medium">{likes}</span>
+                 <span className="text-sm font-medium">{safeNumber(likes)}</span>
               </div>
               <div 
                   role="button"
@@ -416,7 +467,7 @@ export default function PostInteractionBar({
                   className="flex items-center gap-2 text-gray-500 hover:text-[#E50914] transition-colors cursor-pointer"
               >
                  <MessageSquare size={20} />
-                 <span className="text-sm font-medium">{commentsCount}</span>
+                 <span className="text-sm font-medium">{safeNumber(commentsCount)}</span>
               </div>
               <div 
                   role="button"
@@ -457,7 +508,7 @@ export default function PostInteractionBar({
               {comments.length > 0 ? (
                  <div className="mb-4 space-y-3 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
                     {visibleComments.map((c, index) => (
-                      <div key={c.id} ref={index === visibleComments.length - 1 ? lastCommentRef : null}>
+                      <div key={safeId(c?.id)} ref={index === visibleComments.length - 1 ? lastCommentRef : null}>
                         <CommentItem 
                            comment={c} 
                            onLike={handleLikeComment}

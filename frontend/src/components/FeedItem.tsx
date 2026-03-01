@@ -32,6 +32,27 @@ interface FeedItemProps {
   isDarkMode?: boolean;
 }
 
+// Safe rendering helpers to prevent React object child errors
+const safeText = (v: any): string => {
+  if (v == null) return '';
+  if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v);
+
+  if (typeof v === 'object') {
+    if (typeof v.name === 'string') return v.name;
+    if (typeof v.title === 'string') return v.title;
+    if (typeof v.label === 'string') return v.label;
+    if (v.id != null) return String(v.id);
+    return '';
+  }
+
+  return String(v);
+};
+
+const safeArray = (v: any): string[] => {
+  if (!Array.isArray(v)) return [];
+  return v.map(safeText).filter(Boolean);
+};
+
 export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: FeedItemProps) {
   const router = useRouter();
   const [isRequestSent, setIsRequestSent] = useState(false);
@@ -44,7 +65,7 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
   useEffect(() => {
     // Check both userId and userid for compatibility
     const userId = localStorage.getItem('userId') || localStorage.getItem('userid');
-    if (userId && post.author?.id === userId) {
+    if (userId && String(post.author?.id) === String(userId)) {
       setIsOwner(true);
     }
   }, [post.author?.id]);
@@ -89,7 +110,7 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
     e.preventDefault();
     e.stopPropagation();
     setIsRequestSent(true);
-    onRequestJoin?.(post.author.name);
+    onRequestJoin?.(safeText(post.author.name));
   };
 
   const handleApply = async (e: React.MouseEvent) => {
@@ -105,7 +126,8 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/applications/${post.id}/apply`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const response = await fetch(`${apiBase}/applications/${post.id}/apply`, {
         method: 'POST',
         headers: {
           'Accept': '*/*',
@@ -126,7 +148,7 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
       setIsApplied(true);
       // Add a small delay to ensure the toast shows after state update
       setTimeout(() => {
-        onRequestJoin?.(post.author.name);
+        onRequestJoin?.(safeText(post.author.name));
       }, 100);
     } catch (error) {
       console.error('Error applying for job:', error);
@@ -166,19 +188,19 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
           <div className="flex items-start justify-between mb-4">
             <div className="flex gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F4A261] to-[#E50914] flex items-center justify-center text-white font-bold text-sm overflow-hidden relative">
-                {post.author.avatar ? (
-                  <Image src={post.author.avatar} alt={post.author.name} fill sizes="40px" className="object-cover" />
+                {safeText(post.author.avatar) ? (
+                  <Image src={safeText(post.author.avatar)} alt={safeText(post.author.name)} fill sizes="40px" className="object-cover" />
                 ) : (
-                  post.author.name.charAt(0)
+                  safeText(post.author.name).charAt(0)
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className={`font-bold ${isDarkMode ? 'text-[#F9E4AD]' : 'text-black'}`}>{post.author.name}</h3>
-                  <span className="text-sm text-gray-500">{post.author.role}</span>
+                  <h3 className={`font-bold ${isDarkMode ? 'text-[#F9E4AD]' : 'text-black'}`}>{safeText(post.author.name)}</h3>
+                  <span className="text-sm text-gray-500">{safeText(post.author.role)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
-                  <span>{post.createdAt}</span>
+                  <span>{safeText(post.createdAt)}</span>
                   <span>•</span>
                   <Globe size={12} />
                 </div>
@@ -212,8 +234,8 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
           </div>
 
           <div className="mb-4">
-            <p className={`font-bold mb-1 ${isDarkMode ? 'text-[#F4A261]' : 'text-black'}`}>{job.company} is hiring! {job.title}</p>
-            <p className={isDarkMode ? 'text-[#F4A261]' : 'text-gray-600'}>{job.description}</p>
+            <p className={`font-bold mb-1 ${isDarkMode ? 'text-[#F4A261]' : 'text-black'}`}>{safeText(job.company)} is hiring! {safeText(job.title)}</p>
+            <p className={isDarkMode ? 'text-[#F4A261]' : 'text-gray-600'}>{safeText(job.description)}</p>
           </div>
 
           <div className={`border rounded-xl p-3 md:p-5 ${isDarkMode ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5' : 'border-[#2ECC71]/30 bg-[#2ECC71]/5'}`}>
@@ -222,15 +244,15 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
                 <Briefcase size={24} />
               </div>
               <div>
-                <h4 className={`font-bold text-lg leading-tight ${isDarkMode ? 'text-[#F4A261]' : 'text-black'}`}>{job.title}</h4>
-                <p className={`text-sm ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-600'}`}>{job.company}</p>
+                <h4 className={`font-bold text-lg leading-tight ${isDarkMode ? 'text-[#F4A261]' : 'text-black'}`}>{safeText(job.title)}</h4>
+                <p className={`text-sm ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-600'}`}>{safeText(job.company)}</p>
               </div>
             </div>
 
             <div className="mb-4">
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Application Deadline</span>
-                    <span className="text-[10px] font-bold text-[#E50914]">{job.timeLeft}</span>
+                    <span className="text-[10px] font-bold text-[#E50914]">{safeText(job.timeLeft)}</span>
                 </div>
                 <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
                     <div 
@@ -243,22 +265,22 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
             <div className={`flex flex-wrap gap-4 mb-6 text-sm ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-600'}`}>
               <div className="flex items-center gap-1.5">
                 <MapPin size={16} className={`text-gray-400 ${isDarkMode ? 'text-[#F4A261]' : ''}`} />
-                {job.location}
+                {safeText(job.location)}
               </div>
               <div className="flex items-center gap-1.5">
                 <Briefcase size={16} className={`text-gray-400 ${isDarkMode ? 'text-[#F4A261]' : ''}`} />
-                {job.jobType}
+                {safeText(job.jobType)}
               </div>
               <div className="flex items-center gap-1.5">
                 <DollarSign size={16} className={`text-gray-400 ${isDarkMode ? 'text-[#F4A261]' : ''}`} />
-                {job.salary}
+                {safeText(job.salary)}
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2 mb-6">
-              {job.tags?.map((tag) => (
-                <span key={tag} className={`px-3 py-1 rounded-full text-xs font-medium border ${isDarkMode ? 'bg-[#222] text-[#F4A261] border-gray-700' : 'bg-white text-gray-600 border-gray-100'}`}>
-                  {tag}
+              {safeArray(job.tags).map((tag) => (
+                <span key={String(tag)} className={`px-3 py-1 rounded-full text-xs font-medium border ${isDarkMode ? 'bg-[#222] text-[#F4A261] border-gray-700' : 'bg-white text-gray-600 border-gray-100'}`}>
+                  {safeText(tag)}
                 </span>
               ))}
             </div>
@@ -295,18 +317,18 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
           <div className="flex items-start justify-between mb-4">
             <div className="flex gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F4A261] to-[#E50914] flex items-center justify-center text-white font-bold text-sm overflow-hidden relative">
-                {post.author.avatar ? (
-                  <Image src={post.author.avatar} alt={post.author.name} fill sizes="40px" className="object-cover" />
+                {safeText(post.author.avatar) ? (
+                  <Image src={safeText(post.author.avatar)} alt={safeText(post.author.name)} fill sizes="40px" className="object-cover" />
                 ) : (
-                  post.author.name.charAt(0)
+                  safeText(post.author.name).charAt(0)
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className={`font-bold ${isDarkMode ? 'text-[#F9E4AD]' : 'text-black'}`}>{post.author.name}</h3>
+                  <h3 className={`font-bold ${isDarkMode ? 'text-[#F9E4AD]' : 'text-black'}`}>{safeText(post.author.name)}</h3>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                  <span>{post.createdAt}</span>
+                  <span>{safeText(post.createdAt)}</span>
                 </div>
               </div>
             </div>
@@ -316,30 +338,30 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
           </div>
 
           <div className="mb-4">
-            <h3 className={`font-bold text-lg mb-2 ${isDarkMode ? 'text-[#F4A261]' : 'text-black'}`}>{project.title}</h3>
+            <h3 className={`font-bold text-lg mb-2 ${isDarkMode ? 'text-[#F4A261]' : 'text-black'}`}>{safeText(project.title)}</h3>
             <p className={`leading-relaxed ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-600'}`}>
-              {project.description}
+              {safeText(project.description)}
             </p>
           </div>
 
           <div className={`flex flex-wrap gap-4 mb-4 text-sm ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-600'}`}>
              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${isDarkMode ? 'bg-[#222] border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
                 <Users size={16} className="text-[#F4A261]" />
-                <span className={`font-medium ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-700'}`}>{project.membersNeeded} builders needed</span>
+                <span className={`font-medium ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-700'}`}>{safeText(project.membersNeeded)} builders needed</span>
              </div>
              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${isDarkMode ? 'bg-[#222] border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
                 <Send size={16} className="text-[#E50914]" />
                 <span className={`font-medium ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-700'}`}>
-                   {liveRequests} requests sent
+                   {safeText(liveRequests)} requests sent
                 </span>
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse ml-1"></span>
              </div>
           </div>
 
           <div className="flex flex-wrap gap-2 mb-6">
-            {project.tags?.map((tag) => (
-              <span key={tag} className="px-4 py-1.5 rounded-full bg-[#F4A261] text-white text-xs font-bold">
-                {tag}
+            {safeArray(project.tags).map((tag) => (
+              <span key={String(tag)} className="px-4 py-1.5 rounded-full bg-[#F4A261] text-white text-xs font-bold">
+                {safeText(tag)}
               </span>
             ))}
           </div>
@@ -370,10 +392,10 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center gap-1">
               <Globe size={12} />
-              {news.source}
+              {safeText(news.source)}
             </span>
             <span className="text-xs text-gray-400">•</span>
-            <span className="text-xs text-gray-400">{post.createdAt}</span>
+            <span className="text-xs text-gray-400">{safeText(post.createdAt)}</span>
           </div>
           <div role="button" className="text-gray-400 hover:text-black" onClick={e => e.preventDefault()}>
             <MoreHorizontal size={20} />
@@ -382,20 +404,20 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
 
         <div className="mb-4">
           <h3 className={`font-bold text-xl mb-2 leading-tight hover:text-[#E50914] cursor-pointer transition-colors ${isDarkMode ? 'text-[#F4A261]' : 'text-black'}`}>
-            {news.title}
+            {safeText(news.title)}
           </h3>
           <p className={`text-sm leading-relaxed mb-4 ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-600'}`}>
-            {news.summary}
+            {safeText(news.summary)}
           </p>
           
           {news.imageUrl && (
             <div className={`w-full h-48 md:h-64 rounded-xl overflow-hidden mb-4 relative group cursor-pointer ${isDarkMode ? 'bg-[#222]' : 'bg-gray-100'}`}>
-              {news.imageUrl.startsWith('data:') ? (
+              {safeText(news.imageUrl).startsWith('data:') ? (
                 // Use regular img tag for base64 data URLs
                 <>
                   <img 
-                    src={news.imageUrl} 
-                    alt={news.title} 
+                    src={safeText(news.imageUrl)} 
+                    alt={safeText(news.title)} 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                   />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
@@ -404,8 +426,8 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
                 // Use Next.js Image for external URLs
                 <>
                   <Image 
-                    src={news.imageUrl} 
-                    alt={news.title} 
+                    src={safeText(news.imageUrl)} 
+                    alt={safeText(news.title)} 
                     fill
                     sizes="(max-width: 768px) 100vw, 768px"
                     className="object-cover transition-transform duration-700 group-hover:scale-105" 
@@ -441,18 +463,18 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
           <div className="flex items-start justify-between mb-4">
             <div className="flex gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F4A261] to-[#E50914] flex items-center justify-center text-white font-bold text-sm overflow-hidden relative">
-                {post.author.avatar ? (
-                  <Image src={post.author.avatar} alt={post.author.name} fill sizes="40px" className="object-cover" />
+                {safeText(post.author.avatar) ? (
+                  <Image src={safeText(post.author.avatar)} alt={safeText(post.author.name)} fill sizes="40px" className="object-cover" />
                 ) : (
-                  post.author.name.charAt(0)
+                  safeText(post.author.name).charAt(0)
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className={`font-bold ${isDarkMode ? 'text-[#F9E4AD]' : 'text-black'}`}>{post.author.name}</h3>
+                  <h3 className={`font-bold ${isDarkMode ? 'text-[#F9E4AD]' : 'text-black'}`}>{safeText(post.author.name)}</h3>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                  <span>{post.createdAt}</span>
+                  <span>{safeText(post.createdAt)}</span>
                 </div>
               </div>
             </div>
@@ -462,27 +484,27 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
           </div>
 
           <div className="mb-4">
-            {regular.title && <h3 className={`font-bold text-lg mb-2 ${isDarkMode ? 'text-[#F4A261]' : 'text-black'}`}>{regular.title}</h3>}
+            {regular.title && <h3 className={`font-bold text-lg mb-2 ${isDarkMode ? 'text-[#F4A261]' : 'text-black'}`}>{safeText(regular.title)}</h3>}
             {regular.content && (
               <p className={`leading-relaxed mb-4 ${isDarkMode ? 'text-[#F4A261]' : 'text-gray-600'}`}>
-                {regular.content}
+                {safeText(regular.content)}
               </p>
             )}
             
             {regular.image && (
                 <div className={`w-full h-64 md:h-80 rounded-xl overflow-hidden mb-2 border ${isDarkMode ? 'bg-[#222] border-gray-700' : 'bg-gray-100 border-gray-100'}`}>
-                   {regular.image.startsWith('data:video/') ? (
+                   {safeText(regular.image).startsWith('data:video/') ? (
                      // Video display
                      <video 
-                       src={regular.image} 
+                       src={safeText(regular.image)} 
                        controls 
                        className="w-full h-full object-cover"
                        onError={(e) => console.error('Video load error:', e)}
                      />
-                   ) : regular.image.startsWith('data:') ? (
+                   ) : safeText(regular.image).startsWith('data:') ? (
                      // Use regular img tag for base64 image data URLs
                      <img 
-                       src={regular.image} 
+                       src={safeText(regular.image)} 
                        alt="Post Content" 
                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                        onError={(e) => {
@@ -494,7 +516,7 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
                    ) : (
                      // Use Next.js Image for external URLs
                      <Image 
-                       src={regular.image} 
+                       src={safeText(regular.image)} 
                        alt="Post Content" 
                        fill 
                        sizes="(max-width: 768px) 100vw, 768px" 

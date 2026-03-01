@@ -272,3 +272,5 @@ Errors  Files
      1  src/components/ProjectPostDetail.tsx:34
      1  src/components/ProjectPostDetails.tsx:34
      2  src/components/ProjectsTab.tsx:5
+
+npx tsc --noEmit     

@@ -45,7 +45,7 @@ export default function ProjectForm({ onCancel, isDarkMode, onSuccess }: Project
   React.useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE;
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
         const res = await fetch(`${apiUrl}/posts/categories`);
         if (res.ok) {
           const data = await res.json();

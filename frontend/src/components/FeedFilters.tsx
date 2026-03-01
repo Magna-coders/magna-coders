@@ -24,10 +24,21 @@ export default function FeedFilters({ activeFilter, setActiveFilter, isDarkMode 
     const fetchTags = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const res = await fetch(`${apiUrl}/api/tags`);
+        const res = await fetch(`${apiUrl}/tags`);
         if (!res.ok) throw new Error('Failed to fetch tags');
         const data = await res.json();
-        setTags(data);
+        
+        // Handle different response formats
+        if (Array.isArray(data)) {
+          setTags(data);
+        } else if (data?.tags && Array.isArray(data.tags)) {
+          setTags(data.tags);
+        } else if (data?.data && Array.isArray(data.data)) {
+          setTags(data.data);
+        } else {
+          console.warn('Unexpected tags data format:', data);
+          setTags([]);
+        }
       } catch (error) {
         console.error('Failed to fetch tags:', error);
         setTags([]);
@@ -48,15 +59,22 @@ export default function FeedFilters({ activeFilter, setActiveFilter, isDarkMode 
           isDarkMode={isDarkMode} 
         />
       ))}
-      {tags.map(tag => (
-        <FilterPill
-          key={tag.id}
-          label={tag.name}
-          active={activeFilter === tag.name}
-          onClick={() => setActiveFilter(tag.name)}
-          isDarkMode={isDarkMode}
-        />
-      ))}
+      {tags.map(tag => {
+        // Ensure tag has valid properties
+        if (!tag || typeof tag !== 'object') return null;
+        const tagId = tag.id || String(tag);
+        const tagName = tag.name || String(tag);
+        
+        return (
+          <FilterPill
+            key={tagId}
+            label={tagName}
+            active={activeFilter === tagName}
+            onClick={() => setActiveFilter(tagName)}
+            isDarkMode={isDarkMode}
+          />
+        );
+      })}
     </div>
   );
 }

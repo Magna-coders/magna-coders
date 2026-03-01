@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE;
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
 
 interface RequestConfig extends AxiosRequestConfig {
   requiresAuth?: boolean;

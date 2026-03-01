@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Eye, EyeOff, Mail, Lock, Sun, Moon, Github, Chrome, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Sun, Moon, Github as GithubIcon, Chrome, ArrowLeft } from 'lucide-react';
 import { signIn } from 'next-auth/react';
+import Toast from '@/components/Toast';
+import SocialAuthButtons from '@/components/SocialAuthButtons';
 import TopNavigation from '@/components/TopNavigation';
 
 export default function LoginPage() {
@@ -34,6 +36,9 @@ export default function LoginPage() {
       setIsDarkMode(true);
     }
   }, []);
+
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const toggleTheme = () => {
     const newMode = !isDarkMode;
@@ -66,7 +71,7 @@ export default function LoginPage() {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       
-      const response = await fetch(`${apiUrl}/api/auth/login`, {
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +138,7 @@ export default function LoginPage() {
       // Check if backend is reachable before attempting OAuth
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       try {
-        const healthCheck = await fetch(`${apiUrl}/health`, { method: 'GET' });
+        const healthCheck = await fetch(`${apiUrl?.replace(/\/health\/?$/, '')}/health`, { method: 'GET' });
         if (!healthCheck.ok) {
           throw new Error('Backend server is not responding');
         }
@@ -145,8 +150,11 @@ export default function LoginPage() {
         return;
       }
       
-      // Trigger NextAuth Google sign-in with redirect
-      // This will open Google's OAuth popup
+      // Show a quick toast then trigger NextAuth Google sign-in with redirect
+      setToastMessage('Redirecting to Google...');
+      setShowToast(true);
+      await new Promise(res => setTimeout(res, 300));
+      // This will redirect the browser
       await signIn('google', {
         callbackUrl: '/auth/callback',
       });
@@ -169,6 +177,7 @@ export default function LoginPage() {
 
   // Prevent hydration mismatch
   if (!mounted) return null;
+
 
   // Theme Colors
   const theme = {
@@ -344,6 +353,29 @@ export default function LoginPage() {
             )}
           </motion.button>
 
+          {/* Social Buttons */}
+          <div className="mt-4">
+            <SocialAuthButtons
+              isDarkMode={isDarkMode}
+              onGoogleClick={async () => {
+                setToastMessage('Redirecting to Google...');
+                setShowToast(true);
+                await new Promise(res => setTimeout(res, 300));
+                await signIn('google', { callbackUrl: '/auth/callback' });
+              }}
+              onGithubClick={() => {
+                const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
+                const redirectUri = `${window.location.origin}/auth/github/callback`;
+                const state = Math.random().toString(36).substring(7);
+                sessionStorage.setItem('oauth_state', state);
+                setToastMessage('Redirecting to GitHub...');
+                setShowToast(true);
+                const url = `https://github.com/login/oauth/authorize?client_id=${encodeURIComponent(clientId || '')}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${encodeURIComponent(state)}`;
+                setTimeout(() => window.location.href = url, 300);
+              }}
+            />
+          </div>
+
           {/* Divider - Hidden for now
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -392,6 +424,11 @@ export default function LoginPage() {
           </p>
         </div>
       </motion.div>
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 }

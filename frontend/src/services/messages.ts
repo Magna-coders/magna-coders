@@ -1,3 +1,4 @@
+import authService from './authService';
 import { apiFetch } from './apiClient';
 
 export interface Message {

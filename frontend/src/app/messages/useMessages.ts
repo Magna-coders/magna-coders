@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getUserChats, getChatMessages, sendMessage as sendMessageService } from '@/services/messages';
+import { getUserChats, getChatMessages, sendMessage as sendMessageService, markMessagesAsRead } from '@/services/messages';
+import { initSocket, getSocket } from '@/lib/socket';
 import type { Conversation, Message } from '@/types';
 
 const MOCK_FRIENDS = [
@@ -146,6 +147,82 @@ export function useMessages() {
       }
     };
     loadConversations();
+  }, []);
+
+  // Initialize socket once when user has a token
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? (localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('token')) : null;
+    if (!token) return;
+
+    const socket = initSocket(token);
+    if (!socket) return;
+
+    // connect if not connected
+    if (!socket.connected) socket.connect();
+
+    // Global listeners
+    socket.on('user_online', (payload: any) => {
+      // Optionally update friends or conversation presence
+      // payload: { userId, username, isOnline }
+      // Keep minimal for now
+    });
+
+    socket.on('user_offline', (payload: any) => {
+      // handle presence
+    });
+
+    socket.on('error', (payload: any) => {
+      console.error('Socket error:', payload);
+    });
+
+    socket.on('new_message', (msg: any) => {
+      // msg should include conversationId and message payload
+      if (!msg) return;
+      const convId = msg.conversationId || msg.chatId || msg.chat_id || msg.chatId;
+
+      setConversations(prev => prev.map(c => {
+        if (c.id === convId) {
+          const currentUserId = typeof window !== 'undefined' ? (localStorage.getItem('userid') || localStorage.getItem('userId')) : undefined;
+          const newMsg = {
+            id: msg.id,
+            sender: msg.senderId === currentUserId ? 'Me' : 'Other',
+            text: msg.content,
+            time: new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            avatar: msg.senderId === currentUserId ? 'ME' : 'O',
+            isMe: msg.senderId === currentUserId,
+            type: msg.messageType === 'IMAGE' ? 'image' : msg.messageType === 'FILE' ? 'file' : 'text',
+            imageUrl: msg.fileUrl || msg.file_url,
+            fileUrl: msg.fileUrl || msg.file_url,
+            fileName: msg.fileName || msg.file_name,
+            fileSize: msg.fileSize || msg.file_size ? `${((msg.fileSize || msg.file_size) / 1024).toFixed(1)} KB` : undefined,
+            read: !!msg.isRead
+          } as any;
+
+          return {
+            ...c,
+            lastMessage: newMsg.text,
+            time: newMsg.time,
+            messages: [...c.messages, newMsg]
+          };
+        }
+        return c;
+      }));
+    });
+
+    socket.on('user_typing', (indicator: any) => {
+      const convId = indicator.conversationId || indicator.conversation_id;
+      if (!convId) return;
+      setConversations(prev => prev.map(c => c.id === convId ? { ...c, isTyping: !!indicator.isTyping } : c));
+    });
+
+    return () => {
+      try {
+        socket.off('new_message');
+        socket.off('user_typing');
+        socket.off('user_online');
+        socket.off('user_offline');
+      } catch (e) {}
+    };
   }, []);
 
   // Load friends list
@@ -320,12 +397,33 @@ export function useMessages() {
 
   // API Integration: Fetch Messages
   useEffect(() => {
-    if (!USE_REAL_API || !selectedChatId) return;
+    if (!selectedChatId) return;
+
+    // Join socket room for this conversation
+    try {
+      const socket = getSocket();
+      if (socket && socket.connected) {
+        socket.emit('join_conversation', selectedChatId);
+      } else if (socket) {
+        // ensure connect then join
+        socket.connect();
+        socket.once('connect', () => socket.emit('join_conversation', selectedChatId));
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    if (!USE_REAL_API) {
+      setConversations(prev => prev.map(c => c.id === selectedChatId ? { ...c, messages: [] } : c));
+      return;
+    }
 
     const fetchMessages = async () => {
       try {
         const currentUserId = localStorage.getItem('userid');
-        const messages: any[] = await authenticatedFetch(`/chat/${selectedChatId}/messages`);
+        // Try to fetch a large number of messages to load full conversation history for direct chats.
+        // Backend supports pagination; use a high limit to attempt to retrieve all messages in one call.
+        const messages: any[] = await getChatMessages(selectedChatId, 1000, 0);
         
         setConversations(prev => prev.map(c => {
           if (c.id === selectedChatId) {
@@ -359,9 +457,7 @@ export function useMessages() {
 
         // Mark messages as read
         try {
-          await authenticatedFetch(`/chat/${selectedChatId}/read`, {
-            method: 'POST'
-          });
+          await markMessagesAsRead(selectedChatId);
         } catch (error) {
           console.error('Failed to mark messages as read:', error);
         }
@@ -371,6 +467,14 @@ export function useMessages() {
     };
     
     fetchMessages();
+
+    return () => {
+      // leave socket room
+      try {
+        const socket = getSocket();
+        if (socket && socket.connected) socket.emit('leave_conversation', selectedChatId);
+      } catch (e) {}
+    };
   }, [selectedChatId]);
 
   // API Integration: Fetch Chat Details
@@ -489,10 +593,19 @@ export function useMessages() {
 
     if (USE_REAL_API) {
       try {
+        // send via API
         await authenticatedFetch(`/chat/${selectedChatId}/messages`, {
             method: 'POST',
             body: JSON.stringify({ content })
         });
+
+        // also emit via socket for low-latency broadcast (server may accept this)
+        try {
+          const socket = getSocket();
+          if (socket && socket.connected) {
+            socket.emit('send_message', { conversationId: selectedChatId, content });
+          }
+        } catch (e) { }
       } catch (error) {
         console.error('Failed to send message:', error);
         // Revert optimistic update if needed

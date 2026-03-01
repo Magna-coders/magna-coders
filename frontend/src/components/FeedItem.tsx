@@ -126,7 +126,7 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
         return;
       }
 
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
       const response = await fetch(`${apiBase}/applications/${post.id}/apply`, {
         method: 'POST',
         headers: {

@@ -2,10 +2,10 @@
 -- Sample data for development and testing
 
 -- Insert sample users
-INSERT INTO users (id, email, name, password_hash) VALUES
-    (uuid_generate_v4(), 'admin@magna-coders.com', 'Admin User', '$2b$10$example.hash.for.password123'),
-    (uuid_generate_v4(), 'john.doe@example.com', 'John Doe', '$2b$10$example.hash.for.password123'),
-    (uuid_generate_v4(), 'jane.smith@example.com', 'Jane Smith', '$2b$10$example.hash.for.password123');
+INSERT INTO users (id, email, name, password_hash, bio) VALUES
+    (uuid_generate_v4(), 'admin@magna-coders.com', 'Admin User', '$2b$10$example.hash.for.password123', 'Platform administrator and mentor.'),
+    (uuid_generate_v4(), 'john.doe@example.com', 'John Doe', '$2b$10$example.hash.for.password123', 'Full-stack developer who loves TypeScript and open-source.'),
+    (uuid_generate_v4(), 'jane.smith@example.com', 'Jane Smith', '$2b$10$example.hash.for.password123', 'Frontend engineer and UI/UX enthusiast.');
 
 -- Insert sample posts
 INSERT INTO posts (title, content, published, author_id) VALUES

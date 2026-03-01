@@ -24,7 +24,7 @@ export default function FeedFilters({ activeFilter, setActiveFilter, isDarkMode 
     const fetchTags = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const res = await fetch(`${apiUrl}/api/tags`);
+        const res = await fetch(`${apiUrl}/tags`);
         if (!res.ok) throw new Error('Failed to fetch tags');
         const data = await res.json();
         

@@ -53,7 +53,7 @@ export default function JobsPage() {
         // Fetch all opportunities and bookmarked jobs in parallel
         const [opportunitiesRes, bookmarksRes] = await Promise.all([
           listOpportunities({ limit: 20 }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookmarks/me`, {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookmarks/me`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
             }

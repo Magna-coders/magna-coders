@@ -44,7 +44,7 @@ export default function JobPostDetails({ post, isApplied, onApply }: JobPostDeta
         throw new Error('Authentication required');
       }
 
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
       const response = await fetch(`${apiBase}/applications/${post.id}/applications`, {
         method: 'GET',
         headers: {

@@ -45,7 +45,7 @@ export default function AccountSettings({ isDarkMode }: { isDarkMode?: boolean }
         const token = localStorage.getItem('accessToken');
         if (!userId || !token || !API_BASE) return;
 
-        const response = await fetch(`${API_BASE}/api/auth/profile/${userId}`, {
+        const response = await fetch(`${API_BASE}/auth/profile/${userId}`, {
           headers: {
             'Accept': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -124,7 +124,7 @@ export default function AccountSettings({ isDarkMode }: { isDarkMode?: boolean }
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${API_BASE}/api/auth/profile/upload-picture`, {
+      const response = await fetch(`${API_BASE}/auth/profile/upload-picture`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -172,7 +172,7 @@ export default function AccountSettings({ isDarkMode }: { isDarkMode?: boolean }
         whatsapp_url: formData.whatsapp
       };
 
-      const response = await fetch(`${API_BASE}/api/auth/profile/${userId}`, {
+      const response = await fetch(`${API_BASE}/auth/profile/${userId}`, {
         method: 'PUT',
         headers: {
           'Accept': 'application/json',

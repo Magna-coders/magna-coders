@@ -109,7 +109,7 @@ export default function LeftPanel({
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const refreshToken = localStorage.getItem('refreshToken');
 
-      await fetch(`${apiUrl}/api/auth/logout`, {
+      await fetch(`${apiUrl}/auth/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),

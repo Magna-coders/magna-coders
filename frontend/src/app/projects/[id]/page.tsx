@@ -84,7 +84,7 @@ export default function ProjectDetailPage() {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
       };
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
 
       switch (activeDetailTab) {
         case 'members':
@@ -171,7 +171,7 @@ export default function ProjectDetailPage() {
   const handleAddMember = async (userId: string) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/members`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/members`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -197,7 +197,7 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
       const res = await fetch(`${apiBase}/projects/${projectId}/members/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -216,7 +216,7 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
       const res = await fetch(`${apiBase}/projects/${projectId}/tasks`, {
         method: 'POST',
         headers: {
@@ -241,7 +241,7 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
       const res = await fetch(`${apiBase}/projects/${projectId}/tasks/${taskId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -281,7 +281,7 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
       const res = await fetch(`${apiBase}/projects/${projectId}/files`, {
         method: 'POST',
         headers: {
@@ -306,7 +306,7 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
       const res = await fetch(`${apiBase}/projects/${projectId}/files/${fileId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -579,13 +579,20 @@ export default function ProjectDetailPage() {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {members.map((member: any) => {
+                    {members.map((member: any, idx: number) => {
                       const isMemberOwner = project && member.user_id === project.owner?.id;
+                      const handleProfileClick = () => {
+                        router.push(`/user-profile?id=${member.user_id}`);
+                      };
+                      const memberKey = member.id ?? member.user_id ?? `member-${idx}`;
                       return (
-                        <div key={member.user_id} className={`flex items-center justify-between p-4 rounded-xl border ${
+                        <div key={memberKey} className={`flex items-center justify-between p-4 rounded-xl border ${
                           isDarkMode ? 'bg-[#0a0a0a] border-gray-800' : 'bg-gray-50 border-gray-100'
                         }`}>
-                          <div className="flex items-center gap-3">
+                          <div
+                            className="flex items-center gap-3 cursor-pointer"
+                            onClick={handleProfileClick}
+                          >
                             {member.users?.avatar_url ? (
                               <img src={member.users.avatar_url} alt={member.users.username} className="w-10 h-10 rounded-full" />
                             ) : (

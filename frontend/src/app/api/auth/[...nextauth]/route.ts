@@ -11,11 +11,21 @@ import GoogleProvider from "next-auth/providers/google";
  * - User data synchronization
  */
 
+// Validate required environment variables at runtime
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET_KEY || 'your-secret-key-change-me';
+
+if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+  console.warn('[NextAuth] Missing Google OAuth credentials. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file.');
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    ...(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET ? [
+      GoogleProvider({
+        clientId: GOOGLE_CLIENT_ID,
+        clientSecret: GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
           prompt: "consent",
@@ -24,7 +34,8 @@ export const authOptions: NextAuthOptions = {
           scope: "openid email profile"
         }
       }
-    })
+      })
+    ] : [])
   ],
   
   callbacks: {
@@ -37,7 +48,7 @@ export const authOptions: NextAuthOptions = {
         
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         
-        const response = await fetch(`${apiUrl}/api/auth/oauth/callback`, {
+        const response = await fetch(`${apiUrl}/auth/oauth/callback`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -131,7 +142,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60
   },
   
-  secret: process.env.NEXTAUTH_SECRET
+  secret: NEXTAUTH_SECRET
 };
 
 const handler = NextAuth(authOptions);

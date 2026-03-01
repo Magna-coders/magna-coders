@@ -268,7 +268,7 @@ export default function PostInteractionBar({
     if (USE_REAL_API && showComments) {
       const fetchComments = async () => {
         try {
-          const res = await authenticatedFetch(`/api/posts/${postId}/comments?page=1&limit=20`);
+          const res = await authenticatedFetch(`/posts/${postId}/comments?page=1&limit=20`);
           setComments(res.comments || res || []);
         } catch (error) {
           console.error('Failed to fetch comments:', error);
@@ -316,7 +316,7 @@ export default function PostInteractionBar({
     e.preventDefault();
     if (!commentText.trim()) return;
     try {
-      const newComment: Comment = await authenticatedFetch(`/api/posts/${postId}/comments`, {
+      const newComment: Comment = await authenticatedFetch(`/posts/${postId}/comments`, {
         method: 'POST',
         body: JSON.stringify({ content: commentText })
       });
@@ -396,7 +396,7 @@ export default function PostInteractionBar({
 
   const handleReplyComment = async (parentId: string, replyContent: string) => {
     try {
-      const reply: Comment = await authenticatedFetch(`/api/posts/${postId}/comments`, {
+      const reply: Comment = await authenticatedFetch(`/posts/${postId}/comments`, {
         method: 'POST',
         body: JSON.stringify({ content: replyContent, parentId })
       });

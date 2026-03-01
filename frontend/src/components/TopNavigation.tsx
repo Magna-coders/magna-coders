@@ -42,7 +42,7 @@ export default function TopNavigation({
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         if (!token) return;
 
-        const response = await fetch(`${apiUrl}/api/social/notifications/unread`, {
+        const response = await fetch(`${apiUrl}/social/notifications/unread`, {
           headers: {
             'accept': '*/*',
             'Authorization': `Bearer ${token}`

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Wallet, Send, User, Users, Search, Check } from 'lucide-react';
+import authService from '@/services/authService';
 
 interface Friend {
   id: string;
@@ -52,7 +53,7 @@ export default function SendCoinsModal({
   const fetchFriends = async () => {
     setLoadingFriends(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE;
       // Check both userId and userid for compatibility
       const userId = localStorage.getItem('userId') || localStorage.getItem('userid');
       
@@ -61,11 +62,7 @@ export default function SendCoinsModal({
         return;
       }
 
-      const response = await fetch(`${apiUrl}/api/social/following/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
+      const response = await authService.fetchWithAuth(`${apiUrl}/social/following/${userId}`);
 
       if (response.ok) {
         const data = await response.json();

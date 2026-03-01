@@ -1,3 +1,4 @@
+import authService from './authService';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE;
@@ -6,41 +7,13 @@ interface RequestConfig extends AxiosRequestConfig {
   requiresAuth?: boolean;
 }
 
-const axiosInstance = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Use auth service's axios instance which has interceptors for token refresh
+const axiosInstance = authService.getAxiosInstance();
 
-axiosInstance.interceptors.request.use(
-  (config) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Handle global errors like 401 Unauthorized
-    if (error.response && error.response.status === 401) {
-      if (typeof window !== 'undefined') {
-        // Optional: Redirect to login or clear token
-        // localStorage.removeItem('accessToken');
-        // window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
+/**
+ * Backward-compatible apiFetch function
+ * Now uses the auth service's axios instance with automatic token refresh
+ */
 export const apiFetch = async <T>(url: string, config: RequestConfig = {}): Promise<T> => {
   try {
     const response: AxiosResponse<T> = await axiosInstance(url, config);
@@ -50,4 +23,5 @@ export const apiFetch = async <T>(url: string, config: RequestConfig = {}): Prom
   }
 };
 
+export { authService };
 export default axiosInstance;

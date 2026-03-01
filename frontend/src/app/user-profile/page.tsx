@@ -54,7 +54,7 @@ function UserProfileContent() {
         const userId = profileUserId || localStorage.getItem('userId') || localStorage.getItem('userid');
         if (userId) {
           const token = localStorage.getItem('accessToken');
-          const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+          const apiBase = process.env.NEXT_PUBLIC_API_BASE;
           const response = await fetch(`${apiBase}/auth/profile/${userId}`, {
             method: 'GET',
             headers: {
@@ -174,6 +174,7 @@ function UserProfileContent() {
                   user={userData} 
                   isDarkMode={isDarkMode} 
                   isFromNav={isFromNav} 
+                  viewingUserId={profileUserId || undefined}
                 />
 
                 {/* 2. TABS NAVIGATION */}

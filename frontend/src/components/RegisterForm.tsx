@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import Link from 'next/link';
 import SocialAuthButtons from './SocialAuthButtons';
+import Toast from './Toast';
 
 interface RegisterFormProps {
   isDarkMode: boolean;
@@ -10,6 +11,8 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ isDarkMode, onRegisterSuccess }: RegisterFormProps) {
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -52,7 +55,7 @@ export default function RegisterForm({ isDarkMode, onRegisterSuccess }: Register
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       
-      const response = await fetch(`${apiUrl}/api/auth/register`, {
+      const response = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,8 +110,11 @@ export default function RegisterForm({ isDarkMode, onRegisterSuccess }: Register
   };
 
   const handleGoogleLogin = () => {
-    // Google OAuth via NextAuth - redirect to sign in
-    window.location.href = '/login?oauth=google';
+    setToastMessage('Redirecting to Google...');
+    setShowToast(true);
+    setTimeout(() => {
+      window.location.href = '/login?oauth=google';
+    }, 300);
   };
 
   const handleGithubLogin = () => {
@@ -269,13 +275,28 @@ export default function RegisterForm({ isDarkMode, onRegisterSuccess }: Register
         </div>
         */}
 
-        {/* Social Buttons - Hidden for now
-        <SocialAuthButtons 
-          isDarkMode={isDarkMode} 
+        {/* Social Buttons */}
+        <SocialAuthButtons
+          isDarkMode={isDarkMode}
           onGoogleClick={handleGoogleLogin}
-          onGithubClick={handleGithubLogin}
+          onGithubClick={() => {
+            setToastMessage('Redirecting to GitHub...');
+            setShowToast(true);
+            // Construct GitHub URL if client id is present
+            const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
+            const redirectUri = `${window.location.origin}/auth/github/callback`;
+            const state = Math.random().toString(36).substring(7);
+            sessionStorage.setItem('oauth_state', state);
+            const url = `https://github.com/login/oauth/authorize?client_id=${encodeURIComponent(clientId || '')}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${encodeURIComponent(state)}`;
+            setTimeout(() => window.location.href = url, 300);
+          }}
         />
-        */}
+
+        <Toast
+          message={toastMessage}
+          isVisible={showToast}
+          onClose={() => setShowToast(false)}
+        />
       </form>
 
       {/* Footer */}

@@ -2,28 +2,34 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, MapPin, MoreHorizontal, Edit, Github, Linkedin, Globe, Twitter, Instagram, MessageCircle } from 'lucide-react';
+import { BadgeCheck, MapPin, MoreHorizontal, Edit, Github, Linkedin, Globe, Twitter, Instagram, MessageCircle, UserPlus } from 'lucide-react';
 import { UserProfile } from '@/app/user-profile/data';
 
 interface ProfileHeaderProps {
   user: UserProfile;
   isDarkMode: boolean;
   isFromNav: boolean;
+  viewingUserId?: string; // ID of the profile being viewed (if any)
 }
 
-export default function ProfileHeader({ user, isDarkMode, isFromNav }: ProfileHeaderProps) {
+export default function ProfileHeader({ user, isDarkMode, isFromNav, viewingUserId }: ProfileHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [friendStatus, setFriendStatus] = useState<string>(''); // for request/pending
+  const router = require('next/navigation').useRouter();
+
+  const isOwn = viewingUserId && viewingUserId === (localStorage.getItem('userId') || localStorage.getItem('userid'));
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const userId = localStorage.getItem('userId') || localStorage.getItem('userid');
+        // determine which user id to fetch: explicit prop or fallback to logged-in user
+        const userId = viewingUserId || localStorage.getItem('userId') || localStorage.getItem('userid');
         const token = localStorage.getItem('accessToken');
         if (!userId || !token) return;
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile/${userId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -40,9 +46,23 @@ export default function ProfileHeader({ user, isDarkMode, isFromNav }: ProfileHe
       }
     };
     fetchProfileData();
-  }, []);
+  }, [viewingUserId]);
 
-  const avatarUrl = profileData?.avatar_url ? `${process.env.NEXT_PUBLIC_API_URL}${profileData.avatar_url}` : null;
+  // check friendship status when viewing someone else
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (!viewingUserId) return;
+      try {
+        const status = await import('@/services/friends').then(m => m.checkFriendshipStatus(viewingUserId));
+        setFriendStatus(status.status);
+      } catch (e) {
+        console.error('Failed to check friendship status', e);
+      }
+    };
+    checkStatus();
+  }, [viewingUserId]);
+
+  const avatarUrl = profileData?.avatar_url ? profileData.avatar_url : null;
   const displayName = profileData?.username || user.name;
   const firstLetter = displayName.charAt(0).toUpperCase();
 
@@ -202,12 +222,75 @@ export default function ProfileHeader({ user, isDarkMode, isFromNav }: ProfileHe
 
         {/* Actions */}
         <div className="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
-          <button className="flex-1 md:flex-none px-6 py-2.5 bg-gradient-to-r from-[#F4A261] to-[#E50914] text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95">
-            Connect
-          </button>
-          <button className={`flex-1 md:flex-none px-6 py-2.5 border rounded-xl font-bold text-sm transition-all active:scale-95 ${isDarkMode ? 'bg-[#222] border-gray-700 text-white hover:bg-[#333]' : 'bg-white border-gray-200 text-black hover:bg-gray-50'}`}>
-            Message
-          </button>
+            {/* hide actions when viewing own profile */}
+          {!isOwn && (
+            <>
+              <button
+                disabled={friendStatus === 'request_sent' || friendStatus === 'friends'}
+                onClick={async () => {
+                  if (!viewingUserId) return;
+                  try {
+                    const { sendFriendRequest } = await import('@/services/friends');
+                    await sendFriendRequest(viewingUserId);
+                    setFriendStatus('request_sent');
+                  } catch (e) {
+                    console.error('Failed to send friend request', e);
+                  }
+                }}
+                className="flex-1 md:flex-none px-6 py-2.5 bg-gradient-to-r from-[#F4A261] to-[#E50914] text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50"
+              >
+                {friendStatus === 'friends' ? 'Friends' : friendStatus === 'request_sent' ? 'Requested' : 'Connect'}
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (!viewingUserId) return;
+                  // ensure profile exists / query user before opening chat
+                  try {
+                    if (!profileData) {
+                      const token = localStorage.getItem('accessToken');
+                      if (token) {
+                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile/${viewingUserId}`, {
+                          headers: { Authorization: `Bearer ${token}` }
+                        });
+                        if (res.ok) {
+                          const result = await res.json();
+                          setProfileData(result.data || result);
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    console.error('Failed to fetch profile before opening chat', e);
+                  } finally {
+                    router.push(`/messages?action=start_chat&userId=${viewingUserId}`);
+                  }
+                }}
+                className={`flex-1 md:flex-none px-6 py-2.5 border rounded-xl font-bold text-sm transition-all active:scale-95 ${isDarkMode ? 'bg-[#222] border-gray-700 text-white hover:bg-[#333]' : 'bg-white border-gray-200 text-black hover:bg-gray-50'}`}
+              >
+                Message
+              </button>
+
+              {/* Small plus button to quickly add as friend */}
+              {friendStatus !== 'friends' && friendStatus !== 'request_sent' && (
+                <button
+                  onClick={async () => {
+                    if (!viewingUserId) return;
+                    try {
+                      const { sendFriendRequest } = await import('@/services/friends');
+                      await sendFriendRequest(viewingUserId);
+                      setFriendStatus('request_sent');
+                    } catch (e) {
+                      console.error('Failed to send friend request', e);
+                    }
+                  }}
+                  title="Add friend"
+                  className={`p-3 rounded-full border transition-colors ${isDarkMode ? 'bg-[#222] border-gray-700 text-gray-300 hover:bg-[#333]' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                >
+                  <UserPlus size={18} />
+                </button>
+              )}
+            </>
+          )}
           {isFromNav && (
             <div className="relative">
               <button 

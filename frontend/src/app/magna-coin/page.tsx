@@ -13,6 +13,7 @@ import PurchaseButton from '@/components/PurchaseButton';
 import Checkout from '@/components/Checkout';
 import SendCoinsModal from '@/components/SendCoinsModal';
 import CreateWalletModal from '@/components/CreateWalletModal';
+import FeatureComingSoonBanner from '@/components/FeatureComingSoonBanner';
 import { Plus, Send } from 'lucide-react';
 
 const coinPackages = [
@@ -242,6 +243,13 @@ export default function MagnaCoinPage() {
 
   return (
     <div className={`h-screen font-sans flex overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-black text-[#F9E4AD]' : 'bg-[#FDF8F5] text-[#444444]'}`}>
+      
+      {/* Feature Coming Soon Banner */}
+      <FeatureComingSoonBanner 
+        message="🚀 Magna Coin - Feature Coming Soon!" 
+        position="top-right" 
+        showCloseButton={true}
+      />
       
       <SendCoinsModal
         isOpen={isSendModalOpen}

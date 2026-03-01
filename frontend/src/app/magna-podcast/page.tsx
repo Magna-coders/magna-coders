@@ -8,6 +8,7 @@ import PodcastHero from '@/components/PodcastHero';
 import PodcastFilter from '@/components/PodcastFilter';
 import PodcastCard from '@/components/PodcastCard';
 import PodcastPlayer from '@/components/PodcastPlayer';
+import FeatureComingSoonBanner from '@/components/FeatureComingSoonBanner';
 
 const PODCASTS = [
   {
@@ -78,6 +79,14 @@ export default function MagnaPodcastPage() {
 
   return (
     <div className={`min-h-screen font-sans flex transition-colors duration-300 ${isDarkMode ? 'bg-black text-[#F9E4AD]' : 'bg-[#FDF8F5] text-[#444444]'}`}>
+      
+      {/* Feature Coming Soon Banner */}
+      <FeatureComingSoonBanner 
+        message="🚀 Magna Podcast - Feature Coming Soon!" 
+        position="top-right" 
+        showCloseButton={true}
+      />
+      
       {/* LEFT SIDEBAR */}
       <LeftPanel 
         activeTab={activeTab}

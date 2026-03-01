@@ -8,6 +8,7 @@ import CategoryFilter from '@/components/CategoryFilter';
 import CourseCard from '@/components/CourseCard';
 import EmptyState from '@/components/EmptyState';
 import Checkout from '@/components/Checkout';
+import FeatureComingSoonBanner from '@/components/FeatureComingSoonBanner';
 
 const CATEGORIES = ['All', 'Web Development', 'Data Science', 'Mobile Dev', 'Cloud Computing', 'Design'];
 
@@ -118,6 +119,13 @@ export default function MagnaSchoolPage() {
 
   return (
     <div className={`h-screen font-sans flex overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-black text-[#F9E4AD]' : 'bg-[#FDF8F5] text-[#444444]'}`}>
+      
+      {/* Feature Coming Soon Banner */}
+      <FeatureComingSoonBanner 
+        message="🚀 Magna School - Feature Coming Soon!" 
+        position="top-right" 
+        showCloseButton={true}
+      />
       
       {/* LEFT PANEL (Desktop) */}
       <div className={`w-[240px] border-r hidden md:block flex-shrink-0 ${isDarkMode ? 'bg-[#111] border-[#E70008]/20' : 'bg-white border-gray-100'}`}>

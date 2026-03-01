@@ -44,6 +44,7 @@ import {
   Settings
 } from 'lucide-react';
 import { ProjectDetailsModal, DocumentsModal, GroupsModal, MagnaAIModal } from '@/components/contract';
+import FeatureComingSoonBanner from '@/components/FeatureComingSoonBanner';
 
 // Types based on backend spec
 type ContractStatus = 
@@ -639,6 +640,14 @@ export default function ContractPage() {
 
   return (
     <div className="flex min-h-screen bg-black text-[#F9E4AD] font-sans selection:bg-[#E70008] selection:text-white">
+      
+      {/* Feature Coming Soon Banner */}
+      <FeatureComingSoonBanner 
+        message="🚀 Magna Contract - Feature Coming Soon!" 
+        position="top-right" 
+        showCloseButton={true}
+      />
+      
       <LeftControlPanel 
         contract={contract} 
         isExpanded={isSidebarExpanded}

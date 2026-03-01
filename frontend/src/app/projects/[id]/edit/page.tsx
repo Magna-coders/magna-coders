@@ -17,7 +17,7 @@ interface Category {
 export default function EditProjectPage() {
   const params = useParams();
   const router = useRouter();
-  const projectId = params.id as string;
+  const projectId = params?.id as string;
 
   const [form, setForm] = useState({
     title: '',

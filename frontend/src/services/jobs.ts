@@ -8,7 +8,7 @@ export const applyToJob = async (opportunityId: string, data: {
 }) => {
   return await apiFetch(`/applications/${opportunityId}/apply`, {
     method: 'POST',
-    body: JSON.stringify(data)
+    data: data
   });
 };
 
@@ -63,6 +63,6 @@ export const getJobApplications = async (opportunityId: string) => {
 export const updateApplicationStatus = async (applicationId: string, status: string) => {
   return await apiFetch(`/applications/${applicationId}/status`, {
     method: 'PUT',
-    body: JSON.stringify({ status })
+    data: { status }
   });
 };

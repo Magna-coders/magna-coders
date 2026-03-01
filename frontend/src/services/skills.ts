@@ -32,7 +32,7 @@ export const getUserSkills = async (): Promise<Skill[]> => {
 export const addUserSkill = async (skillName: string): Promise<Skill> => {
   const data = await apiFetch<{ success: boolean; skill: Skill }>('/skills/me', {
     method: 'POST',
-    body: JSON.stringify({ skillName })
+    data: { skillName }
   });
   return data.skill;
 };

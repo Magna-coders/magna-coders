@@ -55,7 +55,7 @@ export default function UserProjectsTab({ isDarkMode, isOwnProfile, userId }: Us
       const newVisibility = currentVisibility === 'public' ? 'private' : 'public';
       await apiFetch(`/projects/${projectId}`, {
         method: 'PUT',
-        body: JSON.stringify({ visibility: newVisibility })
+        data: { visibility: newVisibility }
       });
       
       setProjects(projects.map(p => 

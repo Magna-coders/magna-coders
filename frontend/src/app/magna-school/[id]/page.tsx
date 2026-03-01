@@ -14,13 +14,26 @@ import WhatYouWillLearn from '@/components/WhatYouWillLearn';
 import CourseCurriculum from '@/components/CourseCurriculum';
 import InstructorBio from '@/components/InstructorBio';
 import EnrollmentCard from '@/components/EnrollmentCard';
+import { CurriculumSection } from './constants';
 
 const COURSE_DETAILS = {
   1: {
     id: 1,
     title: 'Full Stack Development',
     description: 'Master frontend and backend development with modern tools.',
-    instructor: 'John Doe',
+    category: 'Web Development',
+    level: 'Intermediate',
+    lastUpdated: '2024-01-15',
+    features: ['Lifetime Access', 'Certificate', 'Community Access'],
+    instructor: {
+      name: 'John Doe',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
+      rating: 4.8,
+      students: 1234,
+      courses: 5,
+      bio: 'Experienced full-stack developer with 10+ years of experience.',
+      role: 'Senior Developer'
+    },
     price: 99.99,
     rating: 4.8,
     students: 1234,
@@ -29,21 +42,21 @@ const COURSE_DETAILS = {
     image: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     curriculum: [
       { title: 'Introduction', duration: '30m', videos: 3, lessons: [
-        { title: 'Course Overview', duration: '10m', type: 'video', isFree: true },
-        { title: 'Setup Environment', duration: '15m', type: 'video', isFree: false },
-        { title: 'Project Structure', duration: '5m', type: 'video', isFree: false }
+        { title: 'Course Overview', duration: '10m', type: 'video' as const, isFree: true },
+        { title: 'Setup Environment', duration: '15m', type: 'video' as const, isFree: false },
+        { title: 'Project Structure', duration: '5m', type: 'video' as const, isFree: false }
       ]},
       { title: 'Frontend Basics', duration: '2h', videos: 8, lessons: [
-        { title: 'HTML & CSS Fundamentals', duration: '30m', type: 'video', isFree: false },
-        { title: 'JavaScript Basics', duration: '45m', type: 'video', isFree: false },
-        { title: 'React Components', duration: '40m', type: 'video', isFree: false }
+        { title: 'HTML & CSS Fundamentals', duration: '30m', type: 'video' as const, isFree: false },
+        { title: 'JavaScript Basics', duration: '45m', type: 'video' as const, isFree: false },
+        { title: 'React Components', duration: '40m', type: 'video' as const, isFree: false }
       ]},
       { title: 'Backend API', duration: '3h', videos: 12, lessons: [
-        { title: 'Node.js Setup', duration: '20m', type: 'video', isFree: false },
-        { title: 'Express Routes', duration: '45m', type: 'video', isFree: false },
-        { title: 'Database Connection', duration: '30m', type: 'video', isFree: false }
+        { title: 'Node.js Setup', duration: '20m', type: 'video' as const, isFree: false },
+        { title: 'Express Routes', duration: '45m', type: 'video' as const, isFree: false },
+        { title: 'Database Connection', duration: '30m', type: 'video' as const, isFree: false }
       ]}
-    ],
+    ] as CurriculumSection[],
     whatYouWillLearn: [
       'React and Next.js',
       'Node.js and Express',
@@ -54,7 +67,19 @@ const COURSE_DETAILS = {
     id: 2,
     title: 'Advanced React Patterns',
     description: 'Take your React skills to the next level.',
-    instructor: 'Jane Smith',
+    category: 'Web Development',
+    level: 'Advanced',
+    lastUpdated: '2024-02-20',
+    features: ['Lifetime Access', 'Certificate', 'Community Access'],
+    instructor: {
+      name: 'Jane Smith',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
+      rating: 4.9,
+      students: 850,
+      courses: 3,
+      bio: 'React expert with 8+ years of experience in frontend development.',
+      role: 'Senior Frontend Developer'
+    },
     price: 79.99,
     rating: 4.9,
     students: 850,
@@ -63,16 +88,16 @@ const COURSE_DETAILS = {
     image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     curriculum: [
       { title: 'Hooks Deep Dive', duration: '1h', videos: 5, lessons: [
-        { title: 'useState Hook', duration: '15m', type: 'video', isFree: false },
-        { title: 'useEffect Hook', duration: '20m', type: 'video', isFree: false },
-        { title: 'Custom Hooks', duration: '25m', type: 'video', isFree: false }
+        { title: 'useState Hook', duration: '15m', type: 'video' as const, isFree: false },
+        { title: 'useEffect Hook', duration: '20m', type: 'video' as const, isFree: false },
+        { title: 'Custom Hooks', duration: '25m', type: 'video' as const, isFree: false }
       ]},
       { title: 'Performance Optimization', duration: '2h', videos: 8, lessons: [
-        { title: 'Memo and Callback', duration: '30m', type: 'video', isFree: false },
-        { title: 'Lazy Loading', duration: '45m', type: 'video', isFree: false },
-        { title: 'Bundle Optimization', duration: '45m', type: 'video', isFree: false }
+        { title: 'Memo and Callback', duration: '30m', type: 'video' as const, isFree: false },
+        { title: 'Lazy Loading', duration: '45m', type: 'video' as const, isFree: false },
+        { title: 'Bundle Optimization', duration: '45m', type: 'video' as const, isFree: false }
       ]}
-    ],
+    ] as CurriculumSection[],
     whatYouWillLearn: [
       'Custom Hooks',
       'Context API',

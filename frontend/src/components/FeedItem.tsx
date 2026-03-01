@@ -256,7 +256,7 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
             </div>
 
             <div className="flex flex-wrap gap-2 mb-6">
-              {job.tags.map((tag) => (
+              {job.tags?.map((tag) => (
                 <span key={tag} className={`px-3 py-1 rounded-full text-xs font-medium border ${isDarkMode ? 'bg-[#222] text-[#F4A261] border-gray-700' : 'bg-white text-gray-600 border-gray-100'}`}>
                   {tag}
                 </span>
@@ -337,7 +337,7 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
           </div>
 
           <div className="flex flex-wrap gap-2 mb-6">
-            {project.tags.map((tag) => (
+            {project.tags?.map((tag) => (
               <span key={tag} className="px-4 py-1.5 rounded-full bg-[#F4A261] text-white text-xs font-bold">
                 {tag}
               </span>
@@ -487,8 +487,8 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                        onError={(e) => {
                          console.error('Image load error:', e);
-                         console.log('Image data length:', regular.image.length);
-                         console.log('Image data prefix:', regular.image.substring(0, 50));
+                         console.log('Image data length:', regular.image?.length);
+                         console.log('Image data prefix:', regular.image?.substring(0, 50));
                        }}
                      />
                    ) : (
@@ -507,8 +507,8 @@ export default function FeedItem({ post, onRequestJoin, onDelete, isDarkMode }: 
           </div>
 
           <PostInteractionBar 
-             initialLikes={typeof post.likes === 'number' ? post.likes : (Array.isArray(post.likes) ? post.likes.length : 0)} 
-             initialComments={typeof post.comments === 'number' ? post.comments : (Array.isArray(post.comments) ? post.comments.length : 0)} 
+             initialLikes={post.likes} 
+             initialComments={post.comments} 
              postId={post.id} 
           />
         </Link>

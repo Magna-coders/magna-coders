@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUserFeed, getPosts } from '@/services/posts';
 import type { Post } from '@/services/posts';
-import type { FeedPost } from '@/types';
+import type { FeedPost, JobPost, ProjectPost, TechNewsPost, RegularPost } from '@/types';
 import LeftPanel from '@/components/LeftPanel';
 import TopNavigation from '@/components/TopNavigation';
 import Toast from '@/components/Toast';
@@ -101,9 +101,10 @@ export default function FeedPage() {
         // Map backend data to component format
         const mappedPosts: FeedPost[] = postsData.map((post) => {
           const type = (post.type?.toLowerCase() === 'regular' ? 'regular' : post.type?.toLowerCase()) || 'regular';
-          const mapped: FeedPost = {
+          
+          // Create base post data
+          const basePost = {
             id: post.id,
-            type: type as 'regular' | 'job' | 'project' | 'tech-news',
             author: {
               id: post.userId || post.user?.id || '',
               name: post.user?.username || 'Unknown User',
@@ -117,26 +118,52 @@ export default function FeedPage() {
             title: post.title,
             content: post.content,
             image: post.mediaUrls?.[0],
-            company: post.company,
-            description: post.projectDescription,
-            location: post.location,
-            salary: post.salary,
             tags: post.tags,
-            jobType: post.jobType,
-            summary: post.content || post.newsTitle, // Use content as summary for tech news
-            source: post.newsSource,
-            url: post.newsUrl,
-            imageUrl: post.mediaUrls?.[0],
           };
           
-          console.log(`Post ${post.id}:`, {
-            hasMediaUrls: !!post.mediaUrls,
-            mediaUrlsLength: post.mediaUrls?.length,
-            firstMediaUrl: post.mediaUrls?.[0] ? `${post.mediaUrls[0].substring(0, 100)}...` : 'none',
-            mappedImage: mapped.image ? `${mapped.image.substring(0, 100)}...` : 'none'
-          });
-          
-          return mapped;
+          // Create type-specific post data
+          if (type === 'job') {
+            return {
+              ...basePost,
+              type: 'job' as const,
+              company: post.company,
+              location: post.location,
+              salary: post.salary,
+              jobType: post.jobType,
+            } as JobPost;
+          } else if (type === 'project') {
+            return {
+              ...basePost,
+              type: 'project' as const,
+              description: post.projectDescription,
+            } as ProjectPost;
+          } else if (type === 'tech-news') {
+            return {
+              ...basePost,
+              type: 'tech-news' as const,
+              title: post.newsTitle || post.title || 'Tech News',
+              summary: post.content,
+              source: post.newsSource,
+              url: post.newsUrl,
+            } as TechNewsPost;
+          } else {
+            return {
+              ...basePost,
+              type: 'regular' as const,
+            } as RegularPost;
+          }
+        });
+        
+        // Debug: Log image data
+        mappedPosts.forEach((post, index) => {
+          if (post.image) {
+            console.log(`Post ${index} has image:`, {
+              hasImage: !!post.image,
+              imageType: post.image.startsWith('data:video/') ? 'video' : post.image.startsWith('data:image/') ? 'image' : 'unknown',
+              imageLength: post.image.length,
+              imagePrefix: post.image.substring(0, 50)
+            });
+          }
         });
         
         // Debug: Log image data

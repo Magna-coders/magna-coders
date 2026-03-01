@@ -138,7 +138,7 @@ export default function PostDetailPage() {
                 {/* Type Specific Content */}
                 {post.type === 'job' && (
                     <JobPostDetails 
-                        post={post as JobPost} 
+                        post={post} 
                         isApplied={isApplied} 
                         onApply={() => {
                             setIsApplied(true);
@@ -149,7 +149,7 @@ export default function PostDetailPage() {
 
                 {post.type === 'project' && (
                     <ProjectPostDetails 
-                        post={post as ProjectPost} 
+                        post={post} 
                         isRequestSent={isRequestSent} 
                         onRequest={() => {
                             setIsRequestSent(true);
@@ -159,11 +159,11 @@ export default function PostDetailPage() {
                 )}
 
                 {post.type === 'tech-news' && (
-                    <TechNewsPostDetails post={post as TechNewsPost} />
+                    <TechNewsPostDetails post={post} />
                 )}
 
                 {post.type === 'regular' && (
-                    <RegularPostDetails post={post as RegularPost} />
+                    <RegularPostDetails post={post} />
                 )}
             </div>
         </div>

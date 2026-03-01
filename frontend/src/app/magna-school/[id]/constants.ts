@@ -30,6 +30,7 @@ export interface Lesson {
   type: 'video' | 'text';
   title: string;
   duration?: string;
+  isFree?: boolean;
 }
 
 export interface Instructor {

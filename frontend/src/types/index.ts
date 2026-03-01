@@ -81,4 +81,19 @@ export interface TechNewsPost extends BasePost {
   url?: string;
 }
 
+export interface Comment {
+  id: string;
+  content: string;
+  author: {
+    name: string;
+    avatar?: string;
+  };
+  createdAt: string;
+  timestamp: number;
+  isLiked: boolean;
+  likes: number;
+  isOwner: boolean;
+  replies?: Comment[];
+}
+
 export type FeedPost = RegularPost | JobPost | ProjectPost | TechNewsPost;

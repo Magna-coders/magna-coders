@@ -31,7 +31,7 @@ export default function ProjectPostDetails({ post, isRequestSent, onRequest }: P
               We are building this project to solve a common problem in the developer community. We are looking for passionate developers to join us.
           </p>
           <div className="flex flex-wrap gap-3 mb-8">
-              {post.tags.map(tag => (
+              {post.tags?.map(tag => (
                   <span key={tag} className="px-5 py-2 rounded-full bg-[#F4A261] text-white text-sm font-bold shadow-sm">
                       {tag}
                   </span>

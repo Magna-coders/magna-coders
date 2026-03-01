@@ -14,6 +14,7 @@ import PostHeader from '@/components/PostHeader';
 import JobPostDetails from '@/components/JobPostDetails';
 import ProjectPostDetails from '@/components/ProjectPostDetails';
 import TechNewsPostDetails from '@/components/TechNewsPostDetails';
+import RegularPostDetails from '@/components/RegularPostDetails';
 import { formatTimeAgo } from '@/utils/timeFormat';
 
 export default function PostDetailPage() {
@@ -42,11 +43,12 @@ export default function PostDetailPage() {
           const foundPost = await getPostById(params.id as string);
           if (foundPost) {
             // Map to component format (same as feed page)
-            const mappedPost = {
+            const type = (foundPost.type?.toLowerCase() === 'regular' ? 'regular' : foundPost.type?.toLowerCase()) || 'regular';
+            const mappedPost: FeedPost = {
               id: foundPost.id,
-              type: (foundPost.type?.toLowerCase() === 'regular' ? 'regular' : foundPost.type?.toLowerCase()) || 'regular',
+              type: type as 'regular' | 'job' | 'project' | 'tech-news',
               author: {
-                id: foundPost.userId || foundPost.user?.id,
+                id: foundPost.userId || foundPost.user?.id || '',
                 name: foundPost.user?.username || 'Unknown User',
                 avatar: foundPost.user?.profilePicture,
                 role: foundPost.user?.verified ? 'Verified' : 'Member'
@@ -54,7 +56,7 @@ export default function PostDetailPage() {
               createdAt: formatTimeAgo(foundPost.createdAt),
               likes: foundPost.likes || 0,
               comments: foundPost.comments || 0,
-              isLiked: (foundPost as any).isLiked || false, // Add isLiked status
+              isLiked: (foundPost as any).isLiked || false,
               title: foundPost.title,
               content: foundPost.content,
               image: foundPost.mediaUrls?.[0],
@@ -64,12 +66,12 @@ export default function PostDetailPage() {
               salary: foundPost.salary,
               tags: foundPost.tags,
               jobType: foundPost.jobType,
-              summary: foundPost.content || foundPost.newsTitle, // Use content as summary for tech news
+              summary: foundPost.content || foundPost.newsTitle,
               source: foundPost.newsSource,
               url: foundPost.newsUrl,
               imageUrl: foundPost.mediaUrls?.[0],
             };
-            setPost(mappedPost as any);
+            setPost(mappedPost);
           } else {
             setPost(null);
           }
@@ -160,7 +162,7 @@ export default function PostDetailPage() {
                     <TechNewsPostDetails post={post as TechNewsPost} />
                 )}
 
-                {(post.type === 'post' || post.type === 'regular') && (
+                {post.type === 'regular' && (
                     <RegularPostDetails post={post as RegularPost} />
                 )}
             </div>

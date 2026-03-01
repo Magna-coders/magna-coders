@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUserFeed, getPosts } from '@/services/posts';
-import type { Post as FeedPost } from '@/services/posts';
+import type { Post } from '@/services/posts';
+import type { FeedPost } from '@/types';
 import LeftPanel from '@/components/LeftPanel';
 import TopNavigation from '@/components/TopNavigation';
 import Toast from '@/components/Toast';
@@ -98,12 +99,13 @@ export default function FeedPage() {
         console.log('Raw posts data:', JSON.stringify(postsData, null, 2));
         
         // Map backend data to component format
-        const mappedPosts = postsData.map((post) => {
-          const mapped = {
+        const mappedPosts: FeedPost[] = postsData.map((post) => {
+          const type = (post.type?.toLowerCase() === 'regular' ? 'regular' : post.type?.toLowerCase()) || 'regular';
+          const mapped: FeedPost = {
             id: post.id,
-            type: (post.type?.toLowerCase() === 'regular' ? 'regular' : post.type?.toLowerCase()) || 'regular',
+            type: type as 'regular' | 'job' | 'project' | 'tech-news',
             author: {
-              id: post.userId || post.user?.id,
+              id: post.userId || post.user?.id || '',
               name: post.user?.username || 'Unknown User',
               avatar: post.user?.profilePicture,
               role: post.user?.verified ? 'Verified' : 'Member'
@@ -111,6 +113,7 @@ export default function FeedPage() {
             createdAt: formatTimeAgo(post.createdAt),
             likes: post.likes || 0,
             comments: post.comments || 0,
+            isLiked: (post as any).isLiked || false,
             title: post.title,
             content: post.content,
             image: post.mediaUrls?.[0],

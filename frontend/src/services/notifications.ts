@@ -10,6 +10,7 @@ export interface Notification {
   application_id?: string;
   opportunity_id?: string;
   project_id?: string;
+  post_id?: string;
   applications?: {
     id: string;
     status: string;

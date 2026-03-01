@@ -28,9 +28,21 @@ const COURSE_DETAILS = {
     duration: '12h 30m',
     image: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     curriculum: [
-      { title: 'Introduction', duration: '30m' },
-      { title: 'Frontend Basics', duration: '2h' },
-      { title: 'Backend API', duration: '3h' }
+      { title: 'Introduction', duration: '30m', videos: 3, lessons: [
+        { title: 'Course Overview', duration: '10m', type: 'video', isFree: true },
+        { title: 'Setup Environment', duration: '15m', type: 'video', isFree: false },
+        { title: 'Project Structure', duration: '5m', type: 'video', isFree: false }
+      ]},
+      { title: 'Frontend Basics', duration: '2h', videos: 8, lessons: [
+        { title: 'HTML & CSS Fundamentals', duration: '30m', type: 'video', isFree: false },
+        { title: 'JavaScript Basics', duration: '45m', type: 'video', isFree: false },
+        { title: 'React Components', duration: '40m', type: 'video', isFree: false }
+      ]},
+      { title: 'Backend API', duration: '3h', videos: 12, lessons: [
+        { title: 'Node.js Setup', duration: '20m', type: 'video', isFree: false },
+        { title: 'Express Routes', duration: '45m', type: 'video', isFree: false },
+        { title: 'Database Connection', duration: '30m', type: 'video', isFree: false }
+      ]}
     ],
     whatYouWillLearn: [
       'React and Next.js',
@@ -50,8 +62,16 @@ const COURSE_DETAILS = {
     duration: '8h 15m',
     image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     curriculum: [
-      { title: 'Hooks Deep Dive', duration: '1h' },
-      { title: 'Performance Optimization', duration: '2h' }
+      { title: 'Hooks Deep Dive', duration: '1h', videos: 5, lessons: [
+        { title: 'useState Hook', duration: '15m', type: 'video', isFree: false },
+        { title: 'useEffect Hook', duration: '20m', type: 'video', isFree: false },
+        { title: 'Custom Hooks', duration: '25m', type: 'video', isFree: false }
+      ]},
+      { title: 'Performance Optimization', duration: '2h', videos: 8, lessons: [
+        { title: 'Memo and Callback', duration: '30m', type: 'video', isFree: false },
+        { title: 'Lazy Loading', duration: '45m', type: 'video', isFree: false },
+        { title: 'Bundle Optimization', duration: '45m', type: 'video', isFree: false }
+      ]}
     ],
     whatYouWillLearn: [
       'Custom Hooks',

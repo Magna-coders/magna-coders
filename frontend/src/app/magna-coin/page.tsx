@@ -16,10 +16,10 @@ import CreateWalletModal from '@/components/CreateWalletModal';
 import { Plus, Send } from 'lucide-react';
 
 const coinPackages = [
-  { id: 1, amount: 100, price: 9.99, bonus: 0 },
-  { id: 2, amount: 500, price: 44.99, bonus: 50 },
-  { id: 3, amount: 1000, price: 89.99, bonus: 150 },
-  { id: 4, amount: 5000, price: 399.99, bonus: 1000 },
+  { id: 1, coins: 100, price: 9.99, bonus: 0, popular: false },
+  { id: 2, coins: 500, price: 44.99, bonus: 50, popular: true },
+  { id: 3, coins: 1000, price: 89.99, bonus: 150, popular: false },
+  { id: 4, coins: 5000, price: 399.99, bonus: 1000, popular: false },
 ];
 
 const paymentMethods = [
@@ -29,9 +29,9 @@ const paymentMethods = [
 ];
 
 const transactions = [
-  { id: 1, type: 'Purchase', amount: 500, date: '2023-10-25', status: 'Completed' },
-  { id: 2, type: 'Spent', amount: -50, date: '2023-10-26', status: 'Completed', description: 'Premium Feature' },
-  { id: 3, type: 'Bonus', amount: 50, date: '2023-10-25', status: 'Completed' },
+  { id: 1, type: 'Purchase', amount: '500', date: '2023-10-25', color: 'green' },
+  { id: 2, type: 'Spent', amount: '-50', date: '2023-10-26', color: 'red' },
+  { id: 3, type: 'Bonus', amount: '50', date: '2023-10-25', color: 'blue' },
 ];
 
 interface Wallet {
@@ -263,7 +263,7 @@ export default function MagnaCoinPage() {
       {isCheckoutOpen && selectedPackage !== null && (
         <Checkout 
           amount={coinPackages.find(p => p.id === selectedPackage)?.price || 0}
-          itemTitle={`${coinPackages.find(p => p.id === selectedPackage)?.amount} Coins`}
+          itemTitle={`${coinPackages.find(p => p.id === selectedPackage)?.coins} Coins`}
           itemDescription="Magna Coin Purchase"
           onClose={() => setIsCheckoutOpen(false)}
           onSuccess={() => {

@@ -17,30 +17,39 @@ const PROJECTS = [
     title: 'E-commerce Platform Redesign',
     status: 'Ongoing',
     description: 'Modernizing the shopping experience with Next.js and Tailwind.',
-    tags: ['Next.js', 'React', 'Tailwind'],
-    members: 4,
+    category: 'Web Development',
+    level: 'Intermediate',
+    techStack: ['Next.js', 'React', 'Tailwind'],
+    teamCount: 4,
     progress: 65,
-    dueDate: '2023-12-15'
+    date: '2023-12-15',
+    image: null
   },
   {
     id: 2,
     title: 'AI Chatbot Integration',
     status: 'Completed',
     description: 'Adding conversational AI capabilities to the support portal.',
-    tags: ['Python', 'OpenAI', 'FastAPI'],
-    members: 3,
+    category: 'AI/ML',
+    level: 'Advanced',
+    techStack: ['Python', 'OpenAI', 'FastAPI'],
+    teamCount: 3,
     progress: 100,
-    dueDate: '2023-10-30'
+    date: '2023-10-30',
+    image: null
   },
   {
     id: 3,
     title: 'Mobile App MVP',
     status: 'Archived',
     description: 'Initial prototype for the mobile application.',
-    tags: ['React Native', 'Firebase'],
-    members: 2,
+    category: 'Mobile Development',
+    level: 'Beginner',
+    techStack: ['React Native', 'Firebase'],
+    teamCount: 2,
     progress: 100,
-    dueDate: '2023-08-20'
+    date: '2023-08-20',
+    image: null
   }
 ];
 

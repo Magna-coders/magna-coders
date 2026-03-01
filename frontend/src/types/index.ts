@@ -26,3 +26,53 @@ export interface Conversation {
   avatarColor: string;
   messages: Message[];
 }
+
+// Post interfaces for frontend components
+export interface Author {
+  id: string;
+  name: string;
+  avatar?: string;
+  role: string;
+}
+
+export interface BasePost {
+  id: string;
+  type: 'regular' | 'job' | 'project' | 'tech-news';
+  author: Author;
+  createdAt: string;
+  likes: number;
+  comments: number;
+  isLiked: boolean;
+  content: string;
+  image?: string;
+  imageUrl?: string;
+  title?: string;
+  tags?: string[];
+}
+
+export interface RegularPost extends BasePost {
+  type: 'regular';
+}
+
+export interface JobPost extends BasePost {
+  type: 'job';
+  company?: string;
+  location?: string;
+  salary?: string;
+  jobType?: string;
+}
+
+export interface ProjectPost extends BasePost {
+  type: 'project';
+  description?: string;
+  techStack?: string[];
+}
+
+export interface TechNewsPost extends BasePost {
+  type: 'tech-news';
+  summary?: string;
+  source?: string;
+  url?: string;
+}
+
+export type FeedPost = RegularPost | JobPost | ProjectPost | TechNewsPost;

@@ -12,7 +12,7 @@ interface FeatureComingSoonBannerProps {
 }
 
 export default function FeatureComingSoonBanner({ 
-  message = "🚀 Feature Coming Soon!", 
+  message = " Feature Coming Soon!", 
   className = "",
   position = 'top',
   showCloseButton = true

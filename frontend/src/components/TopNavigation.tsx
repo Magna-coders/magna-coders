@@ -39,7 +39,7 @@ export default function TopNavigation({
     const fetchUnreadCount = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         if (!token) return;
 
         const response = await fetch(`${apiUrl}/api/social/notifications/unread`, {

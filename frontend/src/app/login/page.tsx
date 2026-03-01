@@ -131,7 +131,7 @@ export default function LoginPage() {
       setErrors({});
       
       // Check if backend is reachable before attempting OAuth
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       try {
         const healthCheck = await fetch(`${apiUrl}/health`, { method: 'GET' });
         if (!healthCheck.ok) {

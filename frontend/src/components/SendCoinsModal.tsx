@@ -52,7 +52,7 @@ export default function SendCoinsModal({
   const fetchFriends = async () => {
     setLoadingFriends(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       // Check both userId and userid for compatibility
       const userId = localStorage.getItem('userId') || localStorage.getItem('userid');
       

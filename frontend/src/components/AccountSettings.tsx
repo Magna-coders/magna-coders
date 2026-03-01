@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Camera, Chrome, ChevronRight, Github, Loader2, Linkedin, Twitter, MessageCircle, RefreshCw } from 'lucide-react';
 import { InputField, Button } from './SettingsHelpers';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export default function AccountSettings({ isDarkMode }: { isDarkMode?: boolean }) {
   const [isConnectingGitHub, setIsConnectingGitHub] = useState(false);

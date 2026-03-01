@@ -34,12 +34,12 @@ export default function APITestPage() {
 
   const runTests = async () => {
     setLoading(true);
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000/api';
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE;
     // Check both userId and userid for compatibility
     const userId = localStorage.getItem('userId') || localStorage.getItem('userid');
     
     const tests = {
-      'Backend Health': `http://localhost:5000/health`,
+      'Backend Health': `https://magna-coders-backend.onrender.com/api/health`,
       'Posts Endpoint': `${apiBase}/posts?limit=5`,
       'Social Feed': `${apiBase}/social/feed?limit=5`,
       'Notifications': `${apiBase}/social/notifications/unread`,

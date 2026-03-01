@@ -84,31 +84,32 @@ export default function ProjectDetailPage() {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
       };
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
 
       switch (activeDetailTab) {
         case 'members':
-          const membersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/projects/${projectId}/members`, { headers });
+          const membersRes = await fetch(`${apiBase}/projects/${projectId}/members`, { headers });
           if (membersRes.ok) {
             const data = await membersRes.json();
             setMembers(data.members || []);
           }
           break;
         case 'tasks':
-          const tasksRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/projects/${projectId}/tasks`, { headers });
+          const tasksRes = await fetch(`${apiBase}/projects/${projectId}/tasks`, { headers });
           if (tasksRes.ok) {
             const data = await tasksRes.json();
             setTasks(data.tasks || []);
           }
           break;
         case 'files':
-          const filesRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/projects/${projectId}/files`, { headers });
+          const filesRes = await fetch(`${apiBase}/projects/${projectId}/files`, { headers });
           if (filesRes.ok) {
             const data = await filesRes.json();
             setFiles(data.files || []);
           }
           break;
         case 'activity':
-          const activityRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/projects/${projectId}/activity`, { headers });
+          const activityRes = await fetch(`${apiBase}/projects/${projectId}/activity`, { headers });
           if (activityRes.ok) {
             const data = await activityRes.json();
             setActivity(data.activity || []);
@@ -196,7 +197,8 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/projects/${projectId}/members/${userId}`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const res = await fetch(`${apiBase}/projects/${projectId}/members/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -214,7 +216,8 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/projects/${projectId}/tasks`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const res = await fetch(`${apiBase}/projects/${projectId}/tasks`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -238,7 +241,8 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/projects/${projectId}/tasks/${taskId}`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const res = await fetch(`${apiBase}/projects/${projectId}/tasks/${taskId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -277,7 +281,8 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/projects/${projectId}/files`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const res = await fetch(`${apiBase}/projects/${projectId}/files`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -301,7 +306,8 @@ export default function ProjectDetailPage() {
     
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/projects/${projectId}/files/${fileId}`, {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/api\/?$/, '');
+      const res = await fetch(`${apiBase}/projects/${projectId}/files/${fileId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

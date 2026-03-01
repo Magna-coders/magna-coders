@@ -63,7 +63,7 @@ export default function LeftPanel({
         if (!userId || !token) return;
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/api/auth/profile/${userId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE}/auth/profile/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Search, MessageSquare, User, FileText } from 'lucide-react';
+import { LayoutDashboard, Search, MessageSquare, User } from 'lucide-react';
 
 export default function BottomNavigation() {
   const pathname = usePathname();
@@ -59,11 +59,6 @@ export default function BottomNavigation() {
       label: 'Profile',
       href: '/user-profile',
       icon: User,
-    },
-    {
-      label: 'Contract',
-      href: '/contract',
-      icon: FileText,
     },
   ];
 

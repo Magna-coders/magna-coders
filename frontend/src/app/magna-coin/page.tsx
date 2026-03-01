@@ -263,7 +263,7 @@ export default function MagnaCoinPage() {
       {isCheckoutOpen && selectedPackage !== null && (
         <Checkout 
           amount={coinPackages.find(p => p.id === selectedPackage)?.price || 0}
-          itemTitle={`${coinPackages.find(p => p.id === selectedPackage)?.coins} Coins`}
+          itemTitle={`${coinPackages.find(p => p.id === selectedPackage)?.amount} Coins`}
           itemDescription="Magna Coin Purchase"
           onClose={() => setIsCheckoutOpen(false)}
           onSuccess={() => {
